@@ -22,14 +22,14 @@
 
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
-| T1 | Init Next.js 15 + TypeScript project | ⬜ Todo | — | npx create-next-app |
-| T2 | Setup Docker Compose (Next.js + PostgreSQL + Nginx) | ⬜ Todo | T1 | Portability: clone → docker compose up |
-| T3 | Setup Prisma + kết nối PostgreSQL | ⬜ Todo | T2 | |
-| T4 | Thiết kế & migrate Database Schema đầy đủ | ⬜ Todo | T3 | Tất cả entities từ brainstorm |
-| T5 | Setup Better Auth (email/password, role admin/user) | ⬜ Todo | T4 | |
-| T6 | Setup CSS Design System (Vanilla CSS variables, layout) | ⬜ Todo | T1 | Colors, typography, spacing tokens |
-| T7 | Layout chính: Sidebar + Header + Main area | ⬜ Todo | T5, T6 | |
-| T8 | Seed data: tạo user admin mặc định | ⬜ Todo | T5 | |
+| T1 | Init Next.js 15 + TypeScript project | ✅ Done | — | npx create-next-app |
+| T2 | Setup Docker Compose (Next.js + PostgreSQL + Nginx) | ✅ Done | T1 | Portability: clone → docker compose up |
+| T3 | Setup Prisma + kết nối PostgreSQL | ✅ Done | T2 | Prisma v7 + @prisma/adapter-pg |
+| T4 | Thiết kế & migrate Database Schema đầy đủ | ✅ Done | T3 | Tất cả entities từ brainstorm |
+| T5 | Setup Better Auth (email/password, role admin/user) | ✅ Done | T4 | |
+| T6 | Setup CSS Design System (Vanilla CSS variables, layout) | ✅ Done | T1 | Colors, typography, spacing tokens |
+| T7 | Layout chính: Sidebar + Header + Main area | ✅ Done | T5, T6 | |
+| T8 | Seed data: tạo user admin mặc định | ✅ Done | T5 | admin@lumi.vn / admin123 |
 
 ### Phase 2 (P2) — Core CRUD: NPP & Contacts
 

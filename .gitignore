@@ -6,18 +6,32 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+.vscode/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# Dependencies (thêm theo tech stack)
-# node_modules/
-# venv/
-# __pycache__/
+# Dependencies
+node_modules/
 
-# Build output (thêm theo tech stack)
-# dist/
-# build/
-# *.pyc
+# Next.js
+app/.next/
+app/out/
+
+# Prisma generated client (regenerate with `npx prisma generate`)
+app/src/generated/
+
+# Build output
+dist/
+build/
+
+# Uploads (runtime data)
+uploads/
+
+# Prisma dev migrations (optional local)
+# app/prisma/migrations/dev
+
+# Docker volumes
+postgres-data/

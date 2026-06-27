@@ -1,0 +1,350 @@
+// CRM Quản lý NPP LUMI — Database Schema
+// Convention: snake_case DB columns, camelCase in Prisma
+// All main entities have: createdAt, updatedAt, createdBy, updatedBy
+// Soft delete: deletedAt DateTime?
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// AUTH & USER
+// ============================================================
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  role          Role     @default(USER)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Better Auth relations
+  sessions Session[]
+  accounts Account[]
+
+  // Business relations
+  assignedCompanies   Company[]     @relation("AssignedTo")
+  createdCompanies    Company[]     @relation("CreatedByUser")
+  createdContacts     Contact[]     @relation("CreatedByUser")
+  createdInteractions Interaction[] @relation("CreatedByUser")
+  assignedTasks       Task[]        @relation("AssignedTo")
+  createdTasks        Task[]        @relation("CreatedByUser")
+  createdScores       ScoreResult[] @relation("ScoredByUser")
+  uploadedFiles       Attachment[]  @relation("UploadedByUser")
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// Better Auth required tables
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("verifications")
+}
+
+// ============================================================
+// COMPANY (NPP)
+// ============================================================
+
+model Company {
+  id           String        @id @default(cuid())
+  name         String
+  taxCode      String?       @unique @map("tax_code")
+  phone        String?
+  email        String?
+  address      String?
+  province     String?
+  district     String?
+  ward         String?
+  status       CompanyStatus @default(PROSPECT)
+  source       String? // Nguồn giới thiệu
+  notes        String?
+  assignedToId String        @map("assigned_to_id")
+  assignedTo   User          @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdById  String        @map("created_by_id")
+  createdBy    User          @relation("CreatedByUser", fields: [createdById], references: [id])
+  updatedBy    String?       @map("updated_by")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
+
+  // Relations
+  contacts     Contact[]
+  interactions Interaction[]
+  tasks        Task[]
+  scoreResults ScoreResult[]
+  attachments  Attachment[]
+  auditLogs    AuditLog[]
+
+  @@map("companies")
+}
+
+enum CompanyStatus {
+  PROSPECT // Tiềm năng
+  CONTACTING // Đang liên hệ
+  NEGOTIATING // Đang đàm phán
+  ACTIVE // Đang hợp tác
+  INACTIVE // Ngừng hợp tác
+  REJECTED // Từ chối
+}
+
+// ============================================================
+// CONTACT (Người liên hệ)
+// ============================================================
+
+model Contact {
+  id          String    @id @default(cuid())
+  companyId   String    @map("company_id")
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fullName    String    @map("full_name")
+  position    String? // Chức vụ
+  phone       String?
+  email       String?
+  isPrimary   Boolean   @default(false) @map("is_primary")
+  influence   String? // Mức ảnh hưởng: high/medium/low
+  notes       String?
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation("CreatedByUser", fields: [createdById], references: [id])
+  updatedBy   String?   @map("updated_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("contacts")
+}
+
+// ============================================================
+// INTERACTION (Nhật ký tương tác)
+// ============================================================
+
+model Interaction {
+  id          String          @id @default(cuid())
+  companyId   String          @map("company_id")
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type        InteractionType
+  content     String // Nội dung ghi chú
+  result      String? // Kết quả
+  contactName String?         @map("contact_name") // Ai được liên hệ
+  followUpAt  DateTime?       @map("follow_up_at")
+  createdById String          @map("created_by_id")
+  createdBy   User            @relation("CreatedByUser", fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@map("interactions")
+}
+
+enum InteractionType {
+  CALL // Gọi điện
+  VISIT // Ghé thăm
+  EMAIL // Email
+  MEETING // Họp
+  ZALO // Zalo/Chat
+  OTHER // Khác
+}
+
+// ============================================================
+// TASK (Nhiệm vụ / Nhắc việc)
+// ============================================================
+
+model Task {
+  id           String       @id @default(cuid())
+  companyId    String       @map("company_id")
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  status       TaskStatus   @default(TODO)
+  priority     TaskPriority @default(MEDIUM)
+  dueDate      DateTime?    @map("due_date")
+  assignedToId String       @map("assigned_to_id")
+  assignedTo   User         @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdById  String       @map("created_by_id")
+  createdBy    User         @relation("CreatedByUser", fields: [createdById], references: [id])
+  completedAt  DateTime?    @map("completed_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ============================================================
+// SCORING (Chấm điểm NPP)
+// ============================================================
+
+model ScoreTemplate {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  version     Int            @default(1)
+  status      TemplateStatus @default(DRAFT)
+  createdById String         @map("created_by_id")
+  updatedBy   String?        @map("updated_by")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  criteria ScoreCriteria[]
+  results  ScoreResult[]
+
+  @@map("score_templates")
+}
+
+enum TemplateStatus {
+  DRAFT // Nháp — có thể sửa
+  PUBLISHED // Ban hành — khóa, dùng để chấm
+  ARCHIVED // Ngừng — không dùng nữa
+}
+
+model ScoreCriteria {
+  id          String        @id @default(cuid())
+  templateId  String        @map("template_id")
+  template    ScoreTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name        String // Tên tiêu chí
+  description String?
+  maxScore    Float         @map("max_score") // Điểm tối đa
+  weight      Float         @default(1.0) // Trọng số
+  sortOrder   Int           @default(0) @map("sort_order")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  resultDetails ScoreResultDetail[]
+
+  @@map("score_criteria")
+}
+
+model ScoreResult {
+  id           String        @id @default(cuid())
+  companyId    String        @map("company_id")
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  templateId   String        @map("template_id")
+  template     ScoreTemplate @relation(fields: [templateId], references: [id])
+  totalScore   Float         @map("total_score") // Điểm tổng chuẩn hóa 0-100
+  grade        String? // A, B, C
+  scoredById   String        @map("scored_by_id")
+  scoredBy     User          @relation("ScoredByUser", fields: [scoredById], references: [id])
+  overrideNote String?       @map("override_note") // Ghi chú nếu ghi đè
+  isOverridden Boolean       @default(false) @map("is_overridden")
+  scoredAt     DateTime      @default(now()) @map("scored_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  details ScoreResultDetail[]
+
+  @@map("score_results")
+}
+
+model ScoreResultDetail {
+  id         String        @id @default(cuid())
+  resultId   String        @map("result_id")
+  result     ScoreResult   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  criteriaId String        @map("criteria_id")
+  criteria   ScoreCriteria @relation(fields: [criteriaId], references: [id])
+  score      Float // Điểm chấm cho tiêu chí này
+  note       String? // Ghi chú
+
+  @@map("score_result_details")
+}
+
+// ============================================================
+// ATTACHMENT (File đính kèm)
+// ============================================================
+
+model Attachment {
+  id           String    @id @default(cuid())
+  companyId    String    @map("company_id")
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fileName     String    @map("file_name")
+  originalName String    @map("original_name")
+  mimeType     String    @map("mime_type")
+  size         Int // bytes
+  path         String // path on disk
+  uploadedById String    @map("uploaded_by_id")
+  uploadedBy   User      @relation("UploadedByUser", fields: [uploadedById], references: [id])
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@map("attachments")
+}
+
+// ============================================================
+// AUDIT LOG (Lịch sử thay đổi per NPP)
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  companyId String   @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  action    String // CREATE, UPDATE, DELETE, SCORE, OVERRIDE...
+  entity    String // company, contact, interaction, score...
+  entityId  String   @map("entity_id")
+  changes   String? // JSON string of changes
+  userId    String   @map("user_id")
+  userName  String   @map("user_name")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
