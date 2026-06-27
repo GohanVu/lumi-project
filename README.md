@@ -6,12 +6,19 @@
 ## Cấu trúc
 
 ```
-.kiro/
-└── steering/
-    ├── workflow-guide.md          ← Quy trình làm việc với AI
-    ├── project-conventions.md     ← Quy ước kỹ thuật (fill sau brainstorm)
-    ├── security-review.md         ← Checklist security review
-    └── documentation-review.md    ← Checklist documentation review
+.kiro/steering/                    ← Kiro (auto-loaded)
+├── workflow-guide.md
+├── project-conventions.md
+├── security-review.md
+└── documentation-review.md
+
+.github/
+└── copilot-instructions.md        ← GitHub Copilot (auto-loaded)
+
+AGENTS.md                          ← OpenAI Codex + Google Antigravity (auto-loaded)
+.cursorrules                       ← Cursor (auto-loaded)
+.windsurfrules                     ← Windsurf (auto-loaded)
+AGENT_INSTRUCTIONS.md              ← Hướng dẫn tổng hợp + paste cho Claude/ChatGPT
 
 docs/
 ├── brainstorm.md                  ← Ghi lại brainstorm sessions

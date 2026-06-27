@@ -1,30 +1,6 @@
-# Agent Instructions
-
-> File này dùng khi làm việc với AI agent KHÔNG phải Kiro (Claude, GPT, Cursor, Copilot, v.v.)
-> Copy nội dung bên dưới vào system prompt hoặc paste đầu conversation.
-
----
-
-## Cách dùng theo từng AI agent
-
-| AI Agent | File auto-loaded | Đã có trong template |
-|----------|-----------------|:-------------------:|
-| **Kiro** | `.kiro/steering/*.md` | ✅ |
-| **Cursor** | `.cursorrules` | ✅ |
-| **Windsurf** | `.windsurfrules` | ✅ |
-| **GitHub Copilot** | `.github/copilot-instructions.md` | ✅ |
-| **OpenAI Codex** | `AGENTS.md` | ✅ |
-| **Google Antigravity** | `AGENTS.md` | ✅ |
-| **Claude / ChatGPT (web)** | Paste phần Instructions bên dưới vào đầu conversation | — |
-
----
-
-## Instructions (copy từ đây xuống)
-
-```
 # Project Instructions
 
-Bạn là AI coding assistant cho project này. Tuân theo các quy tắc sau:
+> File này được đọc tự động bởi Windsurf.
 
 ## Workflow
 
@@ -54,6 +30,7 @@ KHÔNG code ngay khi nhận yêu cầu. Tuân theo workflow:
 
 Sau mỗi session, ghi vào docs/audit-log.md:
 
+```markdown
 ## [YYYY-MM-DD] Session Title
 
 ### Yêu cầu
@@ -70,6 +47,7 @@ Sau mỗi session, ghi vào docs/audit-log.md:
 
 ### Tasks liên quan
 - Task IDs từ plan
+```
 
 ## Plan Format
 
@@ -83,12 +61,3 @@ Tasks trong docs/plan.md dùng status:
 ## Khi bắt đầu session mới
 
 Trả lời: "Tôi đã đọc [list files đã đọc]. Task tiếp theo là [task ID + mô tả]. Confirm để tôi bắt đầu."
-```
-
----
-
-## Notes
-
-- Phần `Instructions` ở trên là bản tổng hợp rút gọn từ tất cả steering files
-- Nếu project đã fill `project-conventions.md` (sau brainstorm), nên append thêm nội dung đó vào instructions
-- Không cần copy nguyên văn security-review hay documentation-review — chỉ dùng khi cần review cụ thể
