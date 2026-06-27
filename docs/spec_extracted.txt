@@ -1,0 +1,180 @@
+TÀI LIỆU ĐẶC TẢ YÊU CẦU
+WEB CRM QUẢN LÝ
+NHÀ PHÂN PHỐI & NGƯỜI LIÊN HỆ
+Dành cho hoạt động phát triển kênh phân phối và quản lý quan hệ khách hàng của ASM LUMI
+Nguyên tắc trọng tâm
+Một công ty → Nhiều người liên hệ → Nhiều lần tương tác → Nhiều cơ hội hợp tác
+Tài liệu ưu tiên xây dựng phiên bản dễ dùng trên điện thoại, dữ liệu không trùng lặp và bộ chấm điểm có thể tự cấu hình mà không sửa mã nguồn.
+0. Hướng dẫn sử dụng tài liệu
+Phạm vi của tài liệu này:
+Mô tả mục tiêu và phạm vi của hệ thống CRM quản lý nhà phân phối tiềm năng.
+Quy định cấu trúc dữ liệu cho công ty, người liên hệ, tương tác, cơ hội hợp tác, lịch nhắc việc và tài liệu đính kèm.
+Đặc tả mô-đun chấm điểm linh hoạt: người quản trị có thể thêm, sửa, ẩn tiêu chí; thay đổi trọng số; ngưỡng phân loại; công thức và phiên bản áp dụng.
+Mô tả các màn hình, luồng thao tác, báo cáo, phân quyền, bảo mật, nhập/xuất dữ liệu và tiêu chí nghiệm thu.
+Phân kỳ tính năng thành MVP và các giai đoạn phát triển sau.
+Mục lục nội dung
+1. Tổng quan sản phẩm
+1.1. Tên và mục tiêu hệ thống
+Tên làm việc: “CRM quản lý Nhà phân phối LUMI” (có thể đổi tên khi triển khai).
+Mục tiêu chính là xây dựng một web nội bộ giúp ASM tập trung toàn bộ thông tin về các nhà phân phối dự kiến chào hợp tác, người liên hệ trong từng đơn vị, lịch sử tiếp cận, nhu cầu, mức độ tiềm năng, công việc cần follow-up và kết quả phát triển kênh.
+1.2. Vấn đề cần giải quyết
+Thông tin công ty và người liên hệ dễ bị trộn trong một dòng Excel, dẫn tới trùng dữ liệu hoặc mất lịch sử khi thay đổi người phụ trách.
+Một công ty có thể có nhiều người ảnh hưởng tới quyết định hợp tác: chủ doanh nghiệp, giám đốc, mua hàng, kinh doanh, kỹ thuật, kế toán.
+Ghi chú trao đổi thường bị ghi đè, khó nhìn lại diễn biến theo thời gian.
+Dễ bỏ sót lịch gọi lại, cuộc hẹn, tài liệu đã hứa gửi hoặc nguyên nhân khách chưa hợp tác.
+Tiêu chí đánh giá nhà phân phối có thể thay đổi theo chiến lược công ty; nếu viết cứng trong code sẽ khó điều chỉnh.
+Khó tổng hợp nhanh báo cáo tuần/tháng và tỷ lệ chuyển đổi từ data mới đến hợp tác thực tế.
+1.3. Phạm vi nghiệp vụ
+1.4. Nguyên tắc thiết kế bắt buộc
+Mobile-first: thao tác nhanh trên điện thoại khi đang đi thị trường.
+Không trùng dữ liệu: số điện thoại, mã số thuế và tên công ty cần có cảnh báo trùng.
+Không xóa mất lịch sử: tương tác, kết quả chấm điểm và thay đổi trạng thái phải lưu theo thời gian.
+Cấu hình thay vì viết cứng: danh mục lựa chọn và đặc biệt là tiêu chí chấm điểm cần quản trị trên giao diện.
+Mỗi bản ghi phải có người tạo, ngày tạo, người cập nhật và ngày cập nhật.
+Dễ xuất dữ liệu để người dùng luôn có bản sao độc lập.
+2. Vai trò người dùng và phân quyền
+3. Mô hình dữ liệu tổng thể
+3.1. Các thực thể chính
+3.2. Quan hệ dữ liệu
+4. Đặc tả dữ liệu hồ sơ công ty/nhà phân phối
+Mỗi công ty/cửa hàng/showroom/hộ kinh doanh được quản lý như một hồ sơ tổ chức. Dưới đây là bộ trường đề xuất; “Không” trong cột bắt buộc nghĩa là có thể để trống ở giai đoạn thu data và bổ sung dần.
+4.1. Nhận diện và quản lý
+4.2. Địa chỉ và khu vực hoạt động
+4.3. Năng lực kinh doanh và vận hành
+4.4. Thương hiệu và kênh bán hiện tại
+4.5. Tiềm năng và định hướng hợp tác
+5. Đặc tả dữ liệu người liên hệ
+Một công ty có thể có nhiều người liên hệ. Hệ thống phải cho phép đánh dấu một hoặc nhiều người quan trọng, đồng thời chỉ định “người liên hệ chính” để hiển thị nhanh trên danh sách công ty.
+5.1. Nhận diện cá nhân
+5.2. Thông tin liên hệ
+5.3. Vai trò công việc và quyền quyết định
+5.4. Hiểu người liên hệ và quản lý quan hệ
+5.5. Theo dõi và phụ trách
+6. Nhật ký tương tác, nhiệm vụ và cơ hội hợp tác
+6.1. Nhật ký tương tác
+6.2. Nhiệm vụ và nhắc việc
+6.3. Cơ hội hợp tác
+7. Mô-đun chấm điểm nhà phân phối có thể tự cấu hình
+7.1. Mục tiêu
+Chuẩn hóa việc đánh giá NPP nhưng vẫn linh hoạt khi chính sách công ty thay đổi.
+Giải thích được vì sao một NPP đạt điểm cao/thấp và tiêu chí nào còn thiếu dữ liệu.
+Giữ lịch sử: điểm cũ phải gắn với đúng phiên bản tiêu chí đã sử dụng tại thời điểm chấm.
+Cho phép tự động tính từ dữ liệu hồ sơ hoặc chấm thủ công khi chưa có trường dữ liệu tương ứng.
+Phân loại A/B/C hoặc các nhóm khác theo ngưỡng mà Admin tự đặt.
+7.2. Cấu trúc mẫu chấm điểm
+7.3. Cấu hình từng tiêu chí
+7.4. Quy tắc cho điểm theo từng kiểu dữ liệu
+7.5. Công thức tính điểm
+Đề xuất dùng công thức chuẩn hóa về thang 100 để kết quả không phụ thuộc tổng trọng số:
+Điểm quy đổi tiêu chí = (Điểm thô / Điểm tối đa) × Trọng số
+Điểm tổng = [Tổng điểm quy đổi / Tổng trọng số được tính] × 100
+Quy tắc:
+Trọng số chỉ cần là số dương; hệ thống tự chuẩn hóa nên Admin không bắt buộc cộng đúng 100.
+Nếu chính sách dữ liệu thiếu là “loại khỏi mẫu số”, tiêu chí chưa có dữ liệu không được cộng vào tổng trọng số được tính.
+Nếu là “tính 0 điểm”, tiêu chí thiếu vẫn được cộng trọng số nhưng nhận 0 điểm.
+Nếu là “không cho hoàn tất”, trạng thái kết quả là Nháp/Chưa đủ dữ liệu và chưa xếp hạng chính thức.
+Hệ thống hiển thị “Độ hoàn thiện dữ liệu” = tổng trọng số đã có câu trả lời / tổng trọng số × 100%.
+7.6. Ngưỡng xếp hạng có thể tự điều chỉnh
+7.7. Phiên bản, ban hành và lịch sử
+Mẫu ở trạng thái Nháp được phép chỉnh sửa tự do và xem trước kết quả trên một số NPP mẫu.
+Khi “Ban hành”, hệ thống khóa cấu hình của phiên bản đó. Muốn thay đổi phải “Nhân bản thành phiên bản mới”.
+Kết quả đã chấm luôn lưu template_id và version; mở lại phải thấy đúng tiêu chí cũ.
+Có thể chọn ngày hiệu lực. Từ ngày đó, lần chấm mới mặc định dùng phiên bản mới.
+Không xóa cứng mẫu đã phát sinh kết quả; chỉ được ngừng áp dụng/lưu trữ.
+Lịch sử cấu hình ghi ai thay đổi, nội dung trước/sau và thời điểm.
+7.8. Ghi đè điểm và phê duyệt
+Ghi đè tổng điểm chỉ dành cho vai trò được cấp quyền.
+Bắt buộc nhập lý do, người duyệt (nếu áp dụng) và thời hạn hiệu lực của ghi đè.
+Giao diện phải đồng thời hiển thị “Điểm hệ thống” và “Điểm sau điều chỉnh”, không che mất điểm gốc.
+Mọi ghi đè đều có thể truy xuất trong audit log.
+7.9. Kết quả chấm điểm cần hiển thị
+Tổng điểm 0–100 và nhóm xếp hạng.
+Độ hoàn thiện dữ liệu và cảnh báo tiêu chí bắt buộc còn thiếu.
+Biểu đồ/ danh sách điểm theo nhóm tiêu chí.
+Ba tiêu chí mạnh nhất và ba tiêu chí yếu/thiếu nhất.
+Phiên bản mẫu, ngày chấm, người chấm, ngày tính lại gần nhất.
+Nút xem chi tiết cách tính và minh chứng từng tiêu chí.
+Lịch sử các lần chấm để so sánh thay đổi theo thời gian.
+8. Luồng nghiệp vụ và trạng thái
+8.1. Pipeline công ty/NPP
+8.2. Luồng tạo data mới
+Từ nút “Thêm nhanh”, nhập tối thiểu: tên công ty/cửa hàng, khu vực, lĩnh vực, nguồn data, người phụ trách.
+Nếu đã có contact, nhập họ tên và số điện thoại ngay trong cùng luồng; hệ thống kiểm tra trùng.
+Sau khi lưu, chuyển đến trang hồ sơ công ty và gợi ý các trường cần bổ sung.
+Có thể tạo nhiệm vụ liên hệ đầu tiên và chọn thời hạn ngay.
+Khi đủ dữ liệu, người dùng chấm điểm hoặc hệ thống tự tạo bản chấm theo mẫu đang hiệu lực.
+8.3. Luồng sau mỗi lần tương tác
+Chọn công ty/người liên hệ và hình thức tương tác.
+Ghi nội dung, nhu cầu, vướng mắc và kết quả.
+Chọn bước tiếp theo và ngày follow-up.
+Hệ thống hỏi có tạo nhiệm vụ mới hay không; mặc định Có khi đã nhập ngày follow-up.
+Có thể cập nhật trạng thái công ty/cơ hội ngay từ form tương tác.
+Nếu tương tác làm thay đổi dữ liệu nguồn của tiêu chí, hệ thống đánh dấu “Điểm có thể đã thay đổi” và cho phép tính lại.
+9. Màn hình và trải nghiệm sử dụng
+9.1. Danh sách NPP – các cột mặc định
+9.2. Hồ sơ NPP – bố cục đề xuất
+Phần đầu trang: tên, trạng thái, điểm, nhóm, người phụ trách, nút gọi nhanh contact chính, nút thêm tương tác/nhiệm vụ.
+Tab Tổng quan: thông tin cơ bản, năng lực, thương hiệu, tiềm năng, ghi chú.
+Tab Người liên hệ: danh sách contact, vai trò, quyền quyết định, kênh liên hệ, lần trao đổi gần nhất.
+Tab Timeline: dòng thời gian tương tác và thay đổi quan trọng, lọc theo loại.
+Tab Cơ hội: giá trị dự kiến, stage, xác suất, ngày chốt, vướng mắc.
+Tab Nhiệm vụ: chưa làm, quá hạn, đã hoàn thành.
+Tab Chấm điểm: kết quả hiện tại, chi tiết tiêu chí, lịch sử, tính lại.
+Tab Tệp: ảnh showroom, catalogue, chính sách, hợp đồng, tài liệu khác.
+Tab Lịch sử: audit log theo quyền truy cập.
+9.3. Yêu cầu mobile-first
+Form thêm nhanh không quá dài; chia bước hoặc cho phép lưu nháp.
+Các trường thường dùng đặt trước; trường nâng cao có thể thu gọn.
+Nút gọi, mở Zalo, mở Google Maps và thêm tương tác phải dễ bấm.
+Danh sách hỗ trợ card view trên màn hình nhỏ, không bắt người dùng kéo ngang bảng quá nhiều.
+Tự lưu nháp khi mất kết nối ngắn hoặc rời form ngoài ý muốn (nếu khả thi).
+10. Tìm kiếm, lọc, báo cáo và nhập/xuất dữ liệu
+10.1. Tìm kiếm và lọc
+Tên công ty/tên pháp lý/mã số thuế.
+Tên người liên hệ/số điện thoại/email.
+Tỉnh, quận/huyện, khu vực kinh doanh.
+Lĩnh vực, mô hình kinh doanh, thương hiệu đang bán.
+Có showroom, đội kỹ thuật, đội thi công, đại lý cấp dưới.
+Trạng thái pipeline, người phụ trách, nguồn data.
+Nhóm điểm A/B/C, khoảng điểm, phiên bản chấm, độ hoàn thiện.
+Ngày liên hệ gần nhất, ngày follow-up, nhiệm vụ quá hạn.
+Có/không có contact chính; có/không có số điện thoại; data chưa đủ.
+10.2. Dashboard và báo cáo
+10.3. Nhập dữ liệu từ Excel
+Có file mẫu với tên cột rõ ràng và hướng dẫn danh mục hợp lệ.
+Cho phép map cột Excel vào trường hệ thống trước khi nhập.
+Xem trước các dòng lỗi, trùng hoặc thiếu bắt buộc; không nhập âm thầm dữ liệu sai.
+Cảnh báo trùng theo mã số thuế, số điện thoại, email và tên + địa chỉ gần giống.
+Cho phép chọn: bỏ qua dòng trùng; cập nhật bản ghi hiện có; hoặc tạo mới có xác nhận.
+Lưu lịch sử lần import: file, người nhập, số thành công/lỗi, thời điểm.
+10.4. Xuất dữ liệu
+Xuất danh sách hiện đang lọc hoặc toàn bộ theo quyền.
+Chọn bộ cột cần xuất; định dạng Excel/CSV.
+Có thể xuất hồ sơ công ty kèm người liên hệ theo hai sheet riêng để tránh lặp dữ liệu.
+Xuất lịch sử tương tác và kết quả chấm điểm thành sheet riêng.
+Mọi lần xuất dữ liệu nhạy cảm cần ghi audit log.
+11. Bảo mật, dữ liệu cá nhân và sao lưu
+11.1. Quy tắc xử lý thông tin riêng tư
+Không bắt buộc nhập ngày sinh, quê quán, sở thích hoặc ghi chú cá nhân.
+Không hiển thị toàn bộ dữ liệu cá nhân cho người không phụ trách nếu công ty cần hạn chế.
+Có chức năng đánh dấu “Không liên hệ” và ghi lý do.
+Không thu thập CCCD, tài khoản ngân hàng cá nhân, tình trạng sức khỏe, quan điểm chính trị/tôn giáo hoặc dữ liệu gia đình chi tiết.
+Ghi chú phải mang tính nghiệp vụ, tôn trọng và có căn cứ; tránh định kiến hoặc suy đoán nhạy cảm.
+12. Phạm vi MVP và lộ trình phát triển
+12.1. MVP – nên làm trước
+12.2. Giai đoạn sau
+Bản đồ NPP và tuyến đi thị trường.
+Tự động tạo báo cáo tuần/tháng dạng Word/PDF.
+Đồng bộ Google Calendar/Lark hoặc gửi thông báo qua email/Zalo khi có điều kiện tích hợp.
+Quản lý đơn hàng đầu tiên, doanh số và tình trạng hoạt động của NPP.
+Cho phép một contact làm việc ở nhiều công ty theo lịch sử nghề nghiệp.
+Biểu đồ nâng cao, dự báo và gợi ý ưu tiên bằng dữ liệu thực tế.
+PWA/offline mode sâu hơn nếu nhu cầu đi thị trường cao.
+13. Tiêu chí nghiệm thu
+13.1. Kịch bản kiểm thử trọng yếu cho phần chấm điểm
+14. Phụ lục
+14.1. Danh mục lựa chọn gợi ý
+14.2. Ví dụ bộ tiêu chí khởi tạo (chỉ để minh họa)
+Lưu ý: Bộ tiêu chí trên không phải cấu hình cố định. Khi triển khai, Admin có thể thay đổi toàn bộ tiêu chí, trọng số, quy tắc và ngưỡng theo chính sách công ty.
+14.3. Ví dụ hồ sơ hiển thị nhanh
+KẾT THÚC TÀI LIỆU ĐẶC TẢ

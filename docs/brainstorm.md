@@ -1,50 +1,137 @@
-# Brainstorm Notes
+﻿# Brainstorm Notes
 
 > File này lưu lại toàn bộ kết quả brainstorm giữa người dùng và AI.
 > Đây là nguồn context quan trọng để hiểu TẠI SAO project được thiết kế như hiện tại.
 
 ---
 
-## Session 1 — [YYYY-MM-DD] — [Tiêu đề]
+## Session 1 — 2026-06-27 — CRM Quản lý NPP LUMI
 
 ### Bối cảnh & Vấn đề
-- Người dùng muốn gì?
-- Problem statement là gì?
+
+Người dùng có tài liệu đặc tả `Dac_ta_web_CRM_quan_ly_NPP_LUMI.docx` mô tả đầy đủ nghiệp vụ.
+
+**Vấn đề gốc (từ đặc tả):**
+- Thông tin NPP và người liên hệ bị trộn lẫn trong Excel → trùng dữ liệu, mất lịch sử
+- Một công ty có nhiều người liên hệ, nhiều vai trò ảnh hưởng quyết định
+- Ghi chú bị ghi đè, khó nhìn lại diễn biến theo thời gian
+- Bỏ sót lịch follow-up, tài liệu đã hứa gửi
+- Tiêu chí đánh giá NPP hay thay đổi → viết cứng code là sai
+- Khó tổng hợp báo cáo tuần/tháng, tỷ lệ chuyển đổi
+
+**Nguyên tắc cốt lõi (từ đặc tả):**
+> Một công ty → Nhiều người liên hệ → Nhiều lần tương tác → Nhiều cơ hội hợp tác
 
 ### Yêu cầu đã xác nhận
-- **Feature 1**: Mô tả
-- **Feature 2**: Mô tả
-- **Platform**: Web / Mobile / Desktop
-- **Users**: Ai dùng, bao nhiêu user
+
+- **Platform**: Desktop web (không cần tối ưu mobile)
+- **Users**: Nội bộ, 1 vài cá nhân (ASM LUMI)
+- **Timeline**: 2 tuần ra MVP
+- **Vibe code**: AI là driver chính → phải tuân thủ steering/rules nghiêm ngặt
+- **File upload**: Có trong MVP
+- **Phân quyền**: 2 role — `admin` và `user` (ASM)
+  - Admin: thấy toàn bộ dữ liệu tất cả ASM
+  - User: chỉ thấy NPP được phân công cho mình
 
 ### Tech Stack đã chọn
 
 | Layer | Công nghệ | Lý do |
 |-------|-----------|-------|
-| Frontend | | |
-| Backend | | |
-| Database | | |
-| Auth | | |
-| Deploy | | |
+| Framework | Next.js 15 (App Router) | Full-stack 1 repo, AI code tốt, API Routes built-in |
+| Language | TypeScript | Ít bug hơn JS thuần khi vibe code |
+| Database | PostgreSQL | Quan hệ phức tạp NPP ↔ Contact ↔ Score |
+| ORM | Prisma | Schema-first, migration rõ ràng, AI hiểu rất tốt |
+| Auth | Better Auth | Nhẹ, dễ setup role-based (admin/user) |
+| Styling | Vanilla CSS + CSS Modules | Không dùng Tailwind, kiểm soát tốt hơn |
+| Validation | Zod | Type-safe từ schema → form → API |
+| Data Fetching | TanStack Query | Tránh bất đồng bộ gây đơ UI |
+| File Storage | Local filesystem (VPS) | Đơn giản, self-host, Nginx serve static |
+| Deploy | Docker Compose + Nginx | 1 command chạy toàn bộ |
+| Hosting | LANIT VPS (Vietnam) | Rẻ, latency thấp |
 
 ### Architecture
-<!-- Vẽ diagram nếu cần -->
+
+```
+Next.js App (Port 3000)
+├── /app                  ← Pages & Layouts (App Router)
+├── /app/api              ← API Routes (full backend)
+│   ├── /api/auth         ← Better Auth handler
+│   ├── /api/companies    ← NPP CRUD
+│   ├── /api/contacts     ← Người liên hệ
+│   ├── /api/interactions ← Nhật ký tương tác
+│   ├── /api/scoring      ← Chấm điểm NPP
+│   └── /api/upload       ← File upload
+├── /components           ← UI components (Vanilla CSS Modules)
+├── /lib/db.ts            ← Prisma client singleton
+├── /lib/auth.ts          ← Better Auth config
+└── /uploads              ← File lưu trên server (gitignored)
+
+PostgreSQL (Port 5432)
+Nginx (Port 80) → reverse proxy → Next.js
+Docker Compose quản lý toàn bộ
+```
 
 ### Database Schema (draft)
-<!-- Draft schema ban đầu -->
 
-### Features MVP
-1. Feature 1
-2. Feature 2
-3. ...
+**Entities chính:**
+- `User` — tài khoản hệ thống (role: admin | user)
+- `Company` — hồ sơ NPP/công ty
+- `Contact` — người liên hệ (nhiều/công ty)
+- `Interaction` — nhật ký tương tác
+- `Task` — nhiệm vụ/nhắc việc
+- `Opportunity` — cơ hội hợp tác
+- `ScoreTemplate` — mẫu chấm điểm (có versioning)
+- `ScoreCriteria` — tiêu chí trong mẫu
+- `ScoreResult` — kết quả chấm cho NPP
+- `Attachment` — file đính kèm
+
+**Quan hệ:**
+```
+User ──── Company (assigned_to)
+Company ──── Contact (1:n)
+Company ──── Interaction (1:n)
+Company ──── Task (1:n)
+Company ──── Opportunity (1:n)
+Company ──── ScoreResult (1:n)
+Company ──── Attachment (1:n)
+ScoreTemplate ──── ScoreCriteria (1:n)
+ScoreTemplate ──── ScoreResult (1:n)
+```
+
+### Features MVP (2 tuần)
+
+1. Auth — Đăng nhập, phân quyền admin/user
+2. Quản lý NPP — CRUD công ty, cảnh báo trùng (SĐT, MST)
+3. Quản lý người liên hệ — Nhiều contact/công ty, vai trò
+4. Nhật ký tương tác — Timeline, ghi chú, follow-up
+5. Nhiệm vụ/Nhắc việc — Tạo task, deadline, trạng thái
+6. Chấm điểm NPP — Module cấu hình được (cơ bản MVP)
+7. File đính kèm — Upload/xem file per NPP
+8. Dashboard — Tổng quan số liệu theo role
+9. Tìm kiếm & Lọc — Lọc cơ bản danh sách NPP
+
+### Giai đoạn sau MVP
+
+- Pipeline/Cơ hội hợp tác chi tiết hơn
+- Import/Export Excel
+- Báo cáo tuần/tháng
+- Bản đồ NPP
+- Đồng bộ Google Calendar / Zalo
+- Scoring versioning đầy đủ
 
 ### Quyết định
-- Quyết định 1 — lý do
-- Quyết định 2 — lý do
 
-### Câu hỏi mở
-- Câu hỏi chưa trả lời được
-- Để quyết định sau
+- Không mobile-first → Desktop web → Đơn giản hóa UI
+- Vanilla CSS thay vì Tailwind → Kiểm soát tốt hơn, tuân thủ rule
+- File lưu local thay vì S3/MinIO → Đơn giản hơn cho self-host VPS rẻ
+- Better Auth thay vì NextAuth → Nhẹ hơn, hỗ trợ role tốt hơn
+- TanStack Query → Rule project nhấn mạnh tránh bất đồng bộ gây đơ UI
+
+### Câu hỏi mở (để quyết định sau)
+
+- Cơ hội hợp tác (Opportunity) có trong MVP không hay phase 2?
+- Scoring versioning phức tạp: MVP làm đơn giản hay full spec?
+- Import Excel: có trong MVP không?
 
 ---
 
