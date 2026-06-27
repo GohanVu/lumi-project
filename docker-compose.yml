@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: ./app
+      target: dev
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=postgresql://lumi:lumi_secret@db:5432/lumi_crm
+      - BETTER_AUTH_SECRET=dev-secret-change-in-production
+      - BETTER_AUTH_URL=http://localhost:3000
+      - NODE_ENV=development
+    volumes:
+      - ./app/src:/app/src
+      - ./app/public:/app/public
+      - ./app/prisma:/app/prisma
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lumi
+      POSTGRES_PASSWORD: lumi_secret
+      POSTGRES_DB: lumi_crm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumi -d lumi_crm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/usr/share/nginx/uploads:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
