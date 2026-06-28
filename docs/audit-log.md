@@ -547,4 +547,34 @@
 
 ---
 
+## 2026-06-29 — Session 17: Push checkpoint T21–T22
+
+### Yêu cầu
+- Đẩy toàn bộ phần code mới nhất lên Git
+
+### Công việc đã làm
+- Đọc lại plan, audit, brainstorm, issues và toàn bộ steering trước khi thao tác
+- Fetch `origin/feat/phase1-setup`; xác nhận remote không có commit mới và local đang đi trước 2 commit
+- Rà diff, whitespace và dấu hiệu secrets trước khi stage
+- Khởi động lại Docker stack và chạy đầy đủ quality gates trong container
+- Commit 26 files của T21, T22 và cache safeguards tại `4cbe82c`
+- Push branch `feat/phase1-setup` lên GitHub; xác nhận local HEAD và remote tracking cùng commit
+
+### Quyết định quan trọng
+- Giữ toàn bộ thay đổi liên quan scoring + cache consistency trong một checkpoint vì plan/audit đã mô tả chung chuỗi T21–T22 và các regression safeguards
+- Không push vào `main`; tiếp tục đúng feature branch hiện tại để không thay đổi luồng merge/review của repository
+
+### Kết quả
+- Code đã được push thành công lên `origin/feat/phase1-setup`
+- Commit tính năng: `4cbe82c feat: add scoring workflow and cache safeguards`
+- Test suite: 39/39 pass
+- TypeScript: pass
+- ESLint: 0 errors, 1 warning React Hook Form/React Compiler đã biết
+
+### Tasks liên quan
+- T21 ✅
+- T22 ✅
+
+---
+
 <!-- Thêm session mới ở đây -->
