@@ -1,0 +1,274 @@
+/* Companies List Page */
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.pageTitle {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-primary-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  transition: background-color var(--transition-fast);
+}
+
+.addButton:hover {
+  background-color: var(--color-primary-700);
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 240px;
+  max-width: 360px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--text-sm);
+  background-color: var(--bg-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+.filterSelect {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--text-sm);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary-400);
+}
+
+/* Table */
+.tableWrapper {
+  background-color: var(--bg-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table thead {
+  background-color: var(--color-gray-50);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-gray-100);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.companyName {
+  font-weight: var(--font-medium);
+  color: var(--color-primary-700);
+  cursor: pointer;
+}
+
+.companyName:hover {
+  color: var(--color-primary-800);
+  text-decoration: underline;
+}
+
+/* Status badge */
+.statusBadge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 9999px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: 1;
+}
+
+.statusProspect {
+  background-color: var(--color-info-light);
+  color: var(--color-primary-700);
+}
+
+.statusContacting {
+  background-color: var(--color-warning-light);
+  color: #92400e;
+}
+
+.statusNegotiating {
+  background-color: #fef3c7;
+  color: #78350f;
+}
+
+.statusActive {
+  background-color: var(--color-success-light);
+  color: #065f46;
+}
+
+.statusInactive {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+}
+
+.statusRejected {
+  background-color: var(--color-danger-light);
+  color: #991b1b;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+.paginationInfo {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.paginationButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.paginationBtn {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-surface);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-primary-400);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.emptyState {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: var(--space-4);
+}
+
+.emptyTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.emptyDesc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  color: var(--text-secondary);
+}
+
+/* Error */
+.error {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-danger);
+}
+
+.retryButton {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+}
+
+/* Meta info (contacts count, etc.) */
+.metaCount {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.assignedUser {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}

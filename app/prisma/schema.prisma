@@ -283,7 +283,8 @@ model ScoreResult {
   company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   templateId   String        @map("template_id")
   template     ScoreTemplate @relation(fields: [templateId], references: [id])
-  totalScore   Float         @map("total_score") // Điểm tổng chuẩn hóa 0-100
+  systemScore  Float?        @map("system_score") // Điểm gốc do hệ thống tính, null với dữ liệu cũ
+  totalScore   Float         @map("total_score") // Điểm hiệu lực 0-100, có thể đã được Admin điều chỉnh
   grade        String? // A, B, C
   scoredById   String        @map("scored_by_id")
   scoredBy     User          @relation("ScoredByUser", fields: [scoredById], references: [id])
