@@ -10,6 +10,7 @@ import {
   type InteractionFormInput,
   type InteractionType,
 } from "@/lib/validation/interaction";
+import { queryKeys } from "@/lib/query-keys";
 import styles from "./TimelineTab.module.css";
 
 interface Interaction {
@@ -95,7 +96,7 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["interactions", companyId],
+    queryKey: queryKeys.companies.interactions(companyId),
     queryFn: async () => {
       const response = await fetch(`/api/companies/${companyId}/interactions`);
       if (!response.ok) {
@@ -135,8 +136,8 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
       return response.json() as Promise<{ data: Interaction }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interactions", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.interactions(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
       setShowForm(false);
     },
   });

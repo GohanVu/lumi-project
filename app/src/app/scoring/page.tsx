@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
+import { queryKeys } from "@/lib/query-keys";
 import {
   templateFormSchema,
   criteriaFormSchema,
@@ -93,7 +94,7 @@ function ScoringAdmin() {
     error: listErr,
     refetch: refetchList,
   } = useQuery({
-    queryKey: ["score-templates"],
+    queryKey: queryKeys.scoreTemplates.all,
     queryFn: async () => {
       const res = await fetch("/api/score-templates");
       if (!res.ok) {
@@ -125,7 +126,7 @@ function ScoringAdmin() {
       return res.json() as Promise<{ data: TemplateListItem }>;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
       setSelectedId(result.data.id);
       setShowTemplateForm(false);
     },
@@ -148,8 +149,8 @@ function ScoringAdmin() {
       return res.json() as Promise<{ data: TemplateListItem }>;
     },
     onSuccess: (_result, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
-      queryClient.invalidateQueries({ queryKey: ["score-template", vars.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(vars.id) });
       setShowTemplateForm(false);
       setEditingTemplate(null);
     },
@@ -164,7 +165,7 @@ function ScoringAdmin() {
       }
     },
     onSuccess: (_r, id) => {
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
       if (selectedId === id) setSelectedId(null);
     },
   });
@@ -316,7 +317,7 @@ function TemplateDetailPanel({
   const [editingCriteria, setEditingCriteria] = useState<Criteria | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["score-template", templateId],
+    queryKey: queryKeys.scoreTemplates.detail(templateId),
     queryFn: async () => {
       const res = await fetch(`/api/score-templates/${templateId}`);
       if (!res.ok) {
@@ -349,8 +350,8 @@ function TemplateDetailPanel({
       return res.json() as Promise<{ data: Criteria }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["score-template", templateId] });
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
       handleCloseCriteria();
     },
   });
@@ -374,7 +375,7 @@ function TemplateDetailPanel({
       return res.json() as Promise<{ data: Criteria }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["score-template", templateId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) });
       handleCloseCriteria();
     },
   });
@@ -388,8 +389,8 @@ function TemplateDetailPanel({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["score-template", templateId] });
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
     },
   });
 
@@ -433,8 +434,8 @@ function TemplateDetailPanel({
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["score-template", templateId] });
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
     },
   });
 
@@ -450,7 +451,7 @@ function TemplateDetailPanel({
       return res.json() as Promise<{ data: { id: string } }>;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["score-templates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
       onCloned(result.data.id);
     },
   });

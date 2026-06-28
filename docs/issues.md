@@ -113,4 +113,14 @@
 - **Test added**: N/A — hydration error là runtime browser error, không test được bằng unit test hiện tại. Phát hiện bằng tay khi mở app.
 - **Lesson learned**: `"use client"` component trong Next.js App Router vẫn được SSR. Mọi component render có điều kiện dựa trên async state (auth, data) **BẮT BUỘC** dùng `isMounted` guard — và vì dự án bật **React Compiler**, KHÔNG được `setState` trong effect, phải dùng `useSyncExternalStore`. Đã cập nhật rule trong `project-conventions.md`. Quality gates (lint + tsc + unit test) không phát hiện được loại bug này — cần smoke test thủ công sau mỗi session chạm vào layout/auth.
 
+### [Issue-009] Danh sách NPP không hiện bản ghi vừa tạo cho đến khi F5
+
+- **Status**: 🟢 Fixed
+- **Severity**: High (dữ liệu đã tạo thành công nhưng UI hiển thị trạng thái cũ)
+- **Phát hiện**: 2026-06-28 — User báo sau khi tạo NPP và được chuyển về `/companies`, bản ghi mới chỉ xuất hiện sau khi F5
+- **Root cause**: Mutation tạo NPP chỉ gọi `router.push("/companies")`. Query danh sách có `staleTime` 60 giây và dùng key `['companies', filters]`, nên khi quay lại trang danh sách TanStack Query tái sử dụng cache cũ thay vì fetch dữ liệu mới.
+- **Fix**: Chuẩn hóa toàn bộ query key tại `query-keys.ts`; sau POST thành công, invalidate collection NPP và chờ hoàn tất trước khi điều hướng. Bổ sung Cache Consistency Gate vào conventions/workflow.
+- **Test added**: `src/lib/company-queries.test.ts` xác minh cache list mặc định và có filter/phân trang đều stale nhưng detail không bị ảnh hưởng; `src/lib/query-key-conventions.test.ts` fail nếu application code khai báo raw query key ngoài factory.
+- **Lesson learned**: Mọi mutation làm thay đổi collection phải invalidate query prefix trước khi điều hướng; `router.push`/`router.refresh` không thay thế việc đồng bộ TanStack Query cache. Quy tắc quan trọng nên có automated guard, không chỉ dựa vào checklist thủ công.
+
 <!-- Thêm issues ở đây -->

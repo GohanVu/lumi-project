@@ -9,6 +9,8 @@ import Link from "next/link";
 import { ContactsTab } from "@/components/companies/ContactsTab";
 import { TimelineTab } from "@/components/companies/TimelineTab";
 import { TasksTab } from "@/components/companies/TasksTab";
+import { ScoresTab } from "@/components/companies/ScoresTab";
+import { queryKeys } from "@/lib/query-keys";
 import styles from "./company-detail.module.css";
 
 // Types
@@ -70,7 +72,7 @@ export default function CompanyDetailPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["company", id],
+    queryKey: queryKeys.companies.detail(id),
     queryFn: async () => {
       const res = await fetch(`/api/companies/${id}`);
       if (!res.ok) {
@@ -167,7 +169,7 @@ export default function CompanyDetailPage() {
           <TasksTab companyId={company.id} />
         )}
         {activeTab === "scores" && (
-          <PlaceholderTab icon="⭐" label="Tab Chấm điểm sẽ được implement ở T21" />
+          <ScoresTab companyId={company.id} canOverride={user?.role === "ADMIN"} />
         )}
         {activeTab === "files" && (
           <PlaceholderTab icon="📎" label="Tab Tệp sẽ được implement ở T26" />

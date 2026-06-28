@@ -4,10 +4,12 @@ import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
+import { invalidateCompanyLists } from "@/lib/company-queries";
+import { queryKeys } from "@/lib/query-keys";
 import Link from "next/link";
 import styles from "./new-company.module.css";
 
@@ -37,6 +39,7 @@ interface DuplicateInfo {
 
 export default function NewCompanyPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: sessionData } = useSession();
   const [serverError, setServerError] = useState("");
   const [duplicates, setDuplicates] = useState<DuplicateInfo[]>([]);
@@ -77,7 +80,7 @@ export default function NewCompanyPage() {
     isLoading: isLoadingUsers,
     isError: isUsersError,
   } = useQuery({
-    queryKey: ["users"],
+    queryKey: queryKeys.users.all,
     queryFn: async () => {
       const res = await fetch("/api/users");
       if (!res.ok) throw new Error("Lỗi tải danh sách users");
@@ -129,7 +132,8 @@ export default function NewCompanyPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await invalidateCompanyLists(queryClient);
       router.push("/companies");
     },
     onError: (err: Error) => {

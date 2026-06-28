@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
+import { queryKeys } from "@/lib/query-keys";
 import styles from "./dashboard.module.css";
 
 const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
@@ -84,7 +85,7 @@ export default function DashboardPage() {
   const user = sessionData?.user as { name?: string; role?: string } | undefined;
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["dashboard"],
+    queryKey: queryKeys.dashboard.all,
     queryFn: async () => {
       const res = await fetch("/api/dashboard");
       if (!res.ok) {

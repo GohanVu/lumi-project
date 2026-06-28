@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
+import { companyQueryKeys } from "@/lib/company-queries";
 import Link from "next/link";
 import styles from "./companies.module.css";
 
@@ -77,7 +78,7 @@ export default function CompaniesPage() {
   const [statusFilter, setStatusFilter] = useState("");
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["companies", { page, search, status: statusFilter }],
+    queryKey: companyQueryKeys.list({ page, search, status: statusFilter }),
     queryFn: () =>
       fetchCompanies({ page, limit: 20, search, status: statusFilter }),
   });

@@ -38,7 +38,7 @@
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
 | T9 | Trang danh sách NPP (bảng, lọc cơ bản, phân quyền) | ✅ Done | P1 | Admin thấy tất cả, User thấy của mình |
-| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ✅ Done | T9 | Issue-006: user thường tự gán ASM, có regression test |
+| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ✅ Done | T9 | Issue-009; query-key factory + cache regression guard |
 | T11 | Trang hồ sơ NPP — layout tab (Tổng quan, Contact, Timeline, Task, Score, File, Log) | ✅ Done | T10 | |
 | T12 | Tab Người liên hệ — CRUD contact, đánh dấu contact chính | ✅ Done | T11 | Shared validation, atomic primary contact, 4 tests |
 | T13 | Tìm kiếm NPP (tên, MST, SĐT) | ✅ Done | T9 | Đã implement cùng T9, reconcile Session 4 |
@@ -63,8 +63,8 @@
 | T18 | Admin: CRUD ScoreTemplate + ScoreCriteria | ✅ Done | P2 | Thêm/sửa/ẩn tiêu chí, trọng số |
 | T19 | Logic tính điểm — công thức chuẩn hóa 0-100 | ✅ Done | T18 | Theo đặc tả section 7.5 |
 | T20 | Versioning template — Ban hành, Nhân bản, Ngừng | ✅ Done | T18 | Khóa config khi ban hành |
-| T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ⬜ Todo | T19, T20 | |
-| T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ⬜ Todo | T21 | |
+| T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ✅ Done | T19, T20 | Dynamic form, server calculation, detail/history, 4 tests |
+| T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ✅ Done | T21 | Giữ điểm hệ thống, Admin-only, audit trước/sau, 5 tests |
 | T23 | Lịch sử chấm điểm — so sánh các lần chấm | ⬜ Todo | T21 | |
 | T24 | Phân loại A/B/C — ngưỡng Admin tự cấu hình | ⬜ Todo | T19 | |
 

@@ -11,6 +11,7 @@ import {
   type TaskStatus,
   type TaskPriority,
 } from "@/lib/validation/task";
+import { queryKeys } from "@/lib/query-keys";
 import styles from "./TasksTab.module.css";
 
 interface TaskUser {
@@ -91,7 +92,7 @@ export function TasksTab({ companyId }: TasksTabProps) {
   const [filter, setFilter] = useState<FilterType>("all");
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["tasks", companyId],
+    queryKey: queryKeys.companies.tasks(companyId),
     queryFn: async () => {
       const res = await fetch(`/api/companies/${companyId}/tasks`);
       if (!res.ok) {
@@ -122,8 +123,8 @@ export function TasksTab({ companyId }: TasksTabProps) {
       return res.json() as Promise<{ data: Task }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.tasks(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
       handleCloseForm();
     },
   });
@@ -150,7 +151,7 @@ export function TasksTab({ companyId }: TasksTabProps) {
       return res.json() as Promise<{ data: Task }>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.tasks(companyId) });
       handleCloseForm();
     },
   });
@@ -164,8 +165,8 @@ export function TasksTab({ companyId }: TasksTabProps) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.tasks(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
     },
   });
 

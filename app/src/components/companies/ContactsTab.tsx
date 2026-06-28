@@ -10,6 +10,7 @@ import {
   type ContactFormInput,
   type ContactInfluence,
 } from "@/lib/validation/contact";
+import { queryKeys } from "@/lib/query-keys";
 import styles from "./ContactsTab.module.css";
 
 // Types
@@ -42,7 +43,7 @@ export function ContactsTab({ companyId }: ContactsTabProps) {
 
   // Fetch contacts
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["contacts", companyId],
+    queryKey: queryKeys.companies.contacts(companyId),
     queryFn: async () => {
       const res = await fetch(`/api/companies/${companyId}/contacts`);
       if (!res.ok) throw new Error("Lỗi tải danh sách liên hệ");
@@ -65,8 +66,8 @@ export function ContactsTab({ companyId }: ContactsTabProps) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.contacts(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
       setShowForm(false);
     },
   });
@@ -86,8 +87,8 @@ export function ContactsTab({ companyId }: ContactsTabProps) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.contacts(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
       setEditingContact(null);
       setShowForm(false);
     },
@@ -104,8 +105,8 @@ export function ContactsTab({ companyId }: ContactsTabProps) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts", companyId] });
-      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.contacts(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
     },
   });
 
