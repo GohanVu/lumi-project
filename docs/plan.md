@@ -26,7 +26,7 @@
 | T2 | Setup Docker Compose (Next.js + PostgreSQL + Nginx) | ✅ Done | T1 | Portability: clone → docker compose up |
 | T3 | Setup Prisma + kết nối PostgreSQL | ✅ Done | T2 | Prisma v7 + @prisma/adapter-pg |
 | T4 | Thiết kế & migrate Database Schema đầy đủ | ✅ Done | T3 | Tất cả entities từ brainstorm |
-| T5 | Setup Better Auth (email/password, role admin/user) | ✅ Done | T4 | |
+| T5 | Setup Better Auth (email/password, role admin/user) | ✅ Done | T4 | Issue-006: same-origin auth, login page, route guard |
 | T6 | Setup CSS Design System (Vanilla CSS variables, layout) | ✅ Done | T1 | Colors, typography, spacing tokens |
 | T7 | Layout chính: Sidebar + Header + Main area | ✅ Done | T5, T6 | |
 | T8 | Seed data: tạo user admin mặc định | ✅ Done | T5 | admin@lumi.vn / admin123 |
@@ -38,7 +38,7 @@
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
 | T9 | Trang danh sách NPP (bảng, lọc cơ bản, phân quyền) | ✅ Done | P1 | Admin thấy tất cả, User thấy của mình |
-| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ✅ Done | T9 | |
+| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ✅ Done | T9 | Issue-006: user thường tự gán ASM, có regression test |
 | T11 | Trang hồ sơ NPP — layout tab (Tổng quan, Contact, Timeline, Task, Score, File, Log) | ✅ Done | T10 | |
 | T12 | Tab Người liên hệ — CRUD contact, đánh dấu contact chính | ✅ Done | T11 | Shared validation, atomic primary contact, 4 tests |
 | T13 | Tìm kiếm NPP (tên, MST, SĐT) | ✅ Done | T9 | Đã implement cùng T9, reconcile Session 4 |
@@ -50,9 +50,9 @@
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
 | T14 | Tab Timeline — log tương tác theo thời gian | ✅ Done | P2 | GET API + timeline UI, nhóm ngày theo giờ VN |
-| T15 | Form thêm tương tác — chọn loại, ghi nội dung, kết quả | ⬜ Todo | T14 | |
-| T16 | Tab Nhiệm vụ — CRUD task, deadline, trạng thái | ⬜ Todo | T14 | |
-| T17 | Dashboard — task quá hạn, follow-up hôm nay | ⬜ Todo | T16 | |
+| T15 | Form thêm tương tác — chọn loại, ghi nội dung, kết quả | ✅ Done | T14 | POST API, form, follow-up ISO, 4 tests |
+| T16 | Tab Nhiệm vụ — CRUD task, deadline, trạng thái | ✅ Done | T14 | |
+| T17 | Dashboard — task quá hạn, follow-up hôm nay | ✅ Done | T16 | |
 
 ### Phase 4 (P4) — Chấm điểm NPP (Full Spec)
 
@@ -60,9 +60,9 @@
 
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
-| T18 | Admin: CRUD ScoreTemplate + ScoreCriteria | ⬜ Todo | P2 | Thêm/sửa/ẩn tiêu chí, trọng số |
-| T19 | Logic tính điểm — công thức chuẩn hóa 0-100 | ⬜ Todo | T18 | Theo đặc tả section 7.5 |
-| T20 | Versioning template — Ban hành, Nhân bản, Ngừng | ⬜ Todo | T18 | Khóa config khi ban hành |
+| T18 | Admin: CRUD ScoreTemplate + ScoreCriteria | ✅ Done | P2 | Thêm/sửa/ẩn tiêu chí, trọng số |
+| T19 | Logic tính điểm — công thức chuẩn hóa 0-100 | ✅ Done | T18 | Theo đặc tả section 7.5 |
+| T20 | Versioning template — Ban hành, Nhân bản, Ngừng | ✅ Done | T18 | Khóa config khi ban hành |
 | T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ⬜ Todo | T19, T20 | |
 | T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ⬜ Todo | T21 | |
 | T23 | Lịch sử chấm điểm — so sánh các lần chấm | ⬜ Todo | T21 | |

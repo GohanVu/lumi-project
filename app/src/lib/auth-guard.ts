@@ -22,3 +22,17 @@ export async function requireAuth() {
   }
   return session;
 }
+
+/**
+ * Require admin role. Returns session if admin, otherwise null.
+ * Caller distinguishes 401 (no session) vs 403 (not admin) bằng cách
+ * kiểm tra session trước.
+ */
+export async function requireAdmin() {
+  const session = await getSession();
+  if (!session) {
+    return { session: null, isAdmin: false } as const;
+  }
+  const user = session.user as { role?: string };
+  return { session, isAdmin: user.role === "ADMIN" } as const;
+}

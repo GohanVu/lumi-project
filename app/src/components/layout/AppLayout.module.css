@@ -10,3 +10,12 @@
   padding: var(--space-8);
   min-height: calc(100vh - var(--header-height));
 }
+
+.authLoading {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}

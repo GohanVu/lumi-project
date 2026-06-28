@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-guard";
+import { resolveCompanyAssigneeId } from "@/lib/company-assignment";
 import { z } from "zod";
 import { CompanyStatus } from "@/generated/prisma/enums";
 
@@ -129,7 +130,7 @@ const createCompanySchema = z.object({
   status: z.nativeEnum(CompanyStatus).default("PROSPECT"),
   source: z.string().max(255).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
-  assignedToId: z.string().min(1, "Phải chọn ASM phụ trách"),
+  assignedToId: z.string().optional().nullable(),
 });
 
 export async function POST(request: NextRequest) {
@@ -167,12 +168,28 @@ export async function POST(request: NextRequest) {
 
   const data = parseResult.data;
   const user = session.user as { id: string; role: string };
+  const assignedToId = resolveCompanyAssigneeId(user, data.assignedToId);
 
-  // Non-admin users can only assign to themselves
-  if (user.role !== "ADMIN" && data.assignedToId !== user.id) {
+  if (!assignedToId) {
     return NextResponse.json(
-      { error: "Bạn chỉ có thể tạo NPP cho chính mình", code: "FORBIDDEN" },
-      { status: 403 }
+      {
+        error: "Phải chọn ASM phụ trách",
+        code: "VALIDATION_ERROR",
+        details: { assignedToId: ["Phải chọn ASM phụ trách"] },
+      },
+      { status: 400 }
+    );
+  }
+
+  const assignee = await prisma.user.findFirst({
+    where: { id: assignedToId, isActive: true },
+    select: { id: true },
+  });
+
+  if (!assignee) {
+    return NextResponse.json(
+      { error: "ASM phụ trách không hợp lệ", code: "INVALID_ASSIGNEE" },
+      { status: 400 }
     );
   }
 
@@ -226,7 +243,7 @@ export async function POST(request: NextRequest) {
       status: data.status,
       source: data.source || null,
       notes: data.notes || null,
-      assignedToId: data.assignedToId,
+      assignedToId,
       createdById: user.id,
     },
   });

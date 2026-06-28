@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/db";
-import { createInteractionSchema } from "@/lib/validation/interaction";
+import { createTaskSchema } from "@/lib/validation/task";
 
 /**
- * GET /api/companies/[id]/interactions — Timeline tương tác của một NPP
+ * GET /api/companies/[id]/tasks — Danh sách nhiệm vụ của một NPP
  * Admin xem tất cả; User chỉ xem NPP được phân công cho mình.
  */
 export async function GET(
@@ -38,31 +38,33 @@ export async function GET(
     );
   }
 
-  const interactions = await prisma.interaction.findMany({
+  const tasks = await prisma.task.findMany({
     where: { companyId: id },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
-      type: true,
-      content: true,
-      result: true,
-      contactName: true,
-      followUpAt: true,
+      title: true,
+      description: true,
+      status: true,
+      priority: true,
+      dueDate: true,
+      completedAt: true,
       createdAt: true,
+      updatedAt: true,
+      assignedTo: {
+        select: { id: true, name: true },
+      },
       createdBy: {
-        select: {
-          id: true,
-          name: true,
-        },
+        select: { id: true, name: true },
       },
     },
   });
 
-  return NextResponse.json({ data: interactions });
+  return NextResponse.json({ data: tasks });
 }
 
 /**
- * POST /api/companies/[id]/interactions — Ghi nhận tương tác mới.
+ * POST /api/companies/[id]/tasks — Tạo nhiệm vụ mới cho NPP
  */
 export async function POST(
   request: NextRequest,
@@ -100,50 +102,49 @@ export async function POST(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Body không hợp lệ", code: "INVALID_BODY" },
+      { error: "Request body không hợp lệ", code: "BAD_REQUEST" },
       { status: 400 }
     );
   }
 
-  const parseResult = createInteractionSchema.safeParse(body);
-  if (!parseResult.success) {
+  const result = createTaskSchema.safeParse(body);
+  if (!result.success) {
     return NextResponse.json(
       {
-        error: "Dữ liệu không hợp lệ",
+        error: result.error.errors[0]?.message ?? "Dữ liệu không hợp lệ",
         code: "VALIDATION_ERROR",
-        details: parseResult.error.flatten().fieldErrors,
       },
-      { status: 400 }
+      { status: 422 }
     );
   }
 
-  const data = parseResult.data;
-  const interaction = await prisma.interaction.create({
+  const { title, description, status, priority, dueDate } = result.data;
+
+  const task = await prisma.task.create({
     data: {
       companyId: id,
-      type: data.type,
-      content: data.content,
-      result: data.result || null,
-      contactName: data.contactName || null,
-      followUpAt: data.followUpAt ? new Date(data.followUpAt) : null,
+      title,
+      description: description ?? null,
+      status: status ?? "TODO",
+      priority: priority ?? "MEDIUM",
+      dueDate: dueDate ? new Date(dueDate) : null,
+      assignedToId: user.id,
       createdById: user.id,
     },
     select: {
       id: true,
-      type: true,
-      content: true,
-      result: true,
-      contactName: true,
-      followUpAt: true,
+      title: true,
+      description: true,
+      status: true,
+      priority: true,
+      dueDate: true,
+      completedAt: true,
       createdAt: true,
-      createdBy: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+      updatedAt: true,
+      assignedTo: { select: { id: true, name: true } },
+      createdBy: { select: { id: true, name: true } },
     },
   });
 
-  return NextResponse.json({ data: interaction }, { status: 201 });
+  return NextResponse.json({ data: task }, { status: 201 });
 }

@@ -4,8 +4,7 @@ import { requireAuth } from "@/lib/auth-guard";
 
 /**
  * GET /api/users — Danh sách users (dùng cho dropdown assign)
- * Admin: thấy tất cả users active
- * User: chỉ thấy chính mình
+ * Admin only: thấy tất cả users active
  */
 export async function GET() {
   const session = await requireAuth();
@@ -18,16 +17,15 @@ export async function GET() {
 
   const user = session.user as { id: string; role: string };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = { isActive: true };
-
-  // Non-admin only sees themselves
   if (user.role !== "ADMIN") {
-    where.id = user.id;
+    return NextResponse.json(
+      { error: "Không có quyền truy cập", code: "FORBIDDEN" },
+      { status: 403 }
+    );
   }
 
   const users = await prisma.user.findMany({
-    where,
+    where: { isActive: true },
     select: {
       id: true,
       name: true,

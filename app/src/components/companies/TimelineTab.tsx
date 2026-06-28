@@ -1,15 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  interactionFormSchema,
+  type InteractionFormData,
+  type InteractionFormInput,
+  type InteractionType,
+} from "@/lib/validation/interaction";
 import styles from "./TimelineTab.module.css";
-
-type InteractionType =
-  | "CALL"
-  | "VISIT"
-  | "EMAIL"
-  | "MEETING"
-  | "ZALO"
-  | "OTHER";
 
 interface Interaction {
   id: string;
@@ -91,6 +92,8 @@ function groupInteractionsByDate(interactions: Interaction[]) {
 }
 
 export function TimelineTab({ companyId }: TimelineTabProps) {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["interactions", companyId],
     queryFn: async () => {
@@ -105,6 +108,50 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
       return response.json() as Promise<{ data: Interaction[] }>;
     },
   });
+
+  const createMutation = useMutation({
+    mutationFn: async (formData: InteractionFormData) => {
+      const response = await fetch(`/api/companies/${companyId}/interactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: formData.type,
+          content: formData.content,
+          result: formData.result || null,
+          contactName: formData.contactName || null,
+          followUpAt: formData.followUpAt
+            ? new Date(formData.followUpAt).toISOString()
+            : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response
+          .json()
+          .catch(() => ({ error: "Lỗi ghi nhận tương tác" }));
+        throw new Error(body.error);
+      }
+
+      return response.json() as Promise<{ data: Interaction }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interactions", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+      setShowForm(false);
+    },
+  });
+
+  const handleOpenForm = () => {
+    createMutation.reset();
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    if (!createMutation.isPending) {
+      createMutation.reset();
+      setShowForm(false);
+    }
+  };
 
   if (isLoading) {
     return <div className={styles.loading}>Đang tải timeline...</div>;
@@ -123,16 +170,6 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
 
   const interactions = data?.data || [];
 
-  if (interactions.length === 0) {
-    return (
-      <div className={styles.empty}>
-        <div className={styles.emptyIcon} aria-hidden="true">◎</div>
-        <h3>Chưa có tương tác</h3>
-        <p>Các cuộc gọi, buổi gặp và trao đổi với NPP sẽ xuất hiện tại đây.</p>
-      </div>
-    );
-  }
-
   const groups = groupInteractionsByDate(interactions);
 
   return (
@@ -142,10 +179,20 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
           <h3 id="timeline-title" className={styles.title}>Timeline tương tác</h3>
           <p className={styles.subtitle}>{interactions.length} hoạt động đã ghi nhận</p>
         </div>
+        <button type="button" className={styles.addButton} onClick={handleOpenForm}>
+          + Thêm tương tác
+        </button>
       </div>
 
-      <div className={styles.groups}>
-        {groups.map((group) => (
+      {interactions.length === 0 ? (
+        <div className={styles.empty}>
+          <div className={styles.emptyIcon} aria-hidden="true">◎</div>
+          <h3>Chưa có tương tác</h3>
+          <p>Hãy ghi nhận cuộc gọi, buổi gặp hoặc trao đổi đầu tiên với NPP.</p>
+        </div>
+      ) : (
+        <div className={styles.groups}>
+          {groups.map((group) => (
           <section key={group.dateKey} className={styles.group}>
             <h4 className={styles.dateHeading}>{group.label}</h4>
             <ol className={styles.timelineList}>
@@ -200,8 +247,157 @@ export function TimelineTab({ companyId }: TimelineTabProps) {
               })}
             </ol>
           </section>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {showForm && (
+        <InteractionFormModal
+          onSubmit={(formData) => createMutation.mutate(formData)}
+          onClose={handleCloseForm}
+          isLoading={createMutation.isPending}
+          error={createMutation.error instanceof Error ? createMutation.error : null}
+        />
+      )}
     </section>
+  );
+}
+
+function InteractionFormModal({
+  onSubmit,
+  onClose,
+  isLoading,
+  error,
+}: {
+  onSubmit: (data: InteractionFormData) => void;
+  onClose: () => void;
+  isLoading: boolean;
+  error: Error | null;
+}) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<InteractionFormInput, unknown, InteractionFormData>({
+    resolver: zodResolver(interactionFormSchema),
+    defaultValues: {
+      type: "CALL",
+      content: "",
+      result: "",
+      contactName: "",
+      followUpAt: "",
+    },
+  });
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="interaction-form-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className={styles.modalHeader}>
+          <h3 id="interaction-form-title" className={styles.modalTitle}>
+            Thêm tương tác
+          </h3>
+          <button
+            type="button"
+            className={styles.closeButton}
+            aria-label="Đóng"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className={styles.formField}>
+            <label className={styles.formLabel} htmlFor="if-type">Loại tương tác *</label>
+            <select id="if-type" className={styles.formSelect} {...register("type")}>
+              <option value="CALL">Gọi điện</option>
+              <option value="VISIT">Ghé thăm</option>
+              <option value="EMAIL">Email</option>
+              <option value="MEETING">Cuộc họp</option>
+              <option value="ZALO">Zalo/Chat</option>
+              <option value="OTHER">Khác</option>
+            </select>
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.formLabel} htmlFor="if-contactName">
+              Người đã liên hệ
+            </label>
+            <input
+              id="if-contactName"
+              type="text"
+              className={styles.formInput}
+              placeholder="Nguyễn Văn A"
+              {...register("contactName")}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.formLabel} htmlFor="if-content">Nội dung *</label>
+            <textarea
+              id="if-content"
+              className={styles.formTextarea}
+              placeholder="Nội dung đã trao đổi..."
+              rows={5}
+              {...register("content")}
+            />
+            {errors.content && (
+              <span className={styles.formError}>{errors.content.message}</span>
+            )}
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.formLabel} htmlFor="if-result">Kết quả</label>
+            <textarea
+              id="if-result"
+              className={styles.formTextarea}
+              placeholder="Kết quả sau tương tác..."
+              rows={3}
+              {...register("result")}
+            />
+          </div>
+
+          <div className={styles.formField}>
+            <label className={styles.formLabel} htmlFor="if-followUpAt">
+              Lịch follow-up
+            </label>
+            <input
+              id="if-followUpAt"
+              type="datetime-local"
+              className={styles.formInput}
+              {...register("followUpAt")}
+            />
+            {errors.followUpAt && (
+              <span className={styles.formError}>{errors.followUpAt.message}</span>
+            )}
+          </div>
+
+          {error && (
+            <div className={styles.formSubmitError} role="alert">{error.message}</div>
+          )}
+
+          <div className={styles.modalActions}>
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading ? "Đang lưu..." : "Lưu tương tác"}
+            </button>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

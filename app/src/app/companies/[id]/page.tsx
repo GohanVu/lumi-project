@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout";
 import Link from "next/link";
 import { ContactsTab } from "@/components/companies/ContactsTab";
 import { TimelineTab } from "@/components/companies/TimelineTab";
+import { TasksTab } from "@/components/companies/TasksTab";
 import styles from "./company-detail.module.css";
 
 // Types
@@ -163,7 +164,7 @@ export default function CompanyDetailPage() {
           <TimelineTab companyId={company.id} />
         )}
         {activeTab === "tasks" && (
-          <PlaceholderTab icon="✅" label="Tab Nhiệm vụ sẽ được implement ở T16" />
+          <TasksTab companyId={company.id} />
         )}
         {activeTab === "scores" && (
           <PlaceholderTab icon="⭐" label="Tab Chấm điểm sẽ được implement ở T21" />

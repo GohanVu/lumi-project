@@ -181,4 +181,238 @@
 
 ---
 
+## 2026-06-28 — Session 6: T15 — Form thêm tương tác
+
+### Yêu cầu
+- Tiếp tục code task kế tiếp sau T14
+- Implement T15: form ghi nhận tương tác mới
+
+### Công việc đã làm
+- Bổ sung `POST /api/companies/[id]/interactions` với Better Auth, RBAC và Zod validation
+- Tạo shared schema cho loại tương tác, nội dung, kết quả, người liên hệ và lịch follow-up
+- Thêm modal React Hook Form vào Timeline, hỗ trợ 6 loại tương tác
+- Dùng TanStack Query mutation; sau khi tạo thành công tự refresh timeline và số lượng trên tab
+- Chuyển giá trị `datetime-local` sang ISO trước khi gửi API
+- Thêm loading, submit error, khóa thao tác đóng form khi request đang chạy
+- Thêm 4 test cho Interaction validation; tổng test suite tăng lên 8 tests
+
+### Quyết định quan trọng
+- **Follow-up gửi dưới dạng ISO**: browser chuyển giờ local sang ISO trước khi POST, server chỉ nhận datetime có offset để tránh hiểu sai múi giờ trong container
+- **Contact name là snapshot text**: tuân theo schema hiện tại `contactName`, giữ đúng tên người được liên hệ tại thời điểm ghi log thay vì phụ thuộc Contact có thể đổi sau này
+- **Shared validation theo boundary**: form schema xử lý `datetime-local`; API schema yêu cầu timestamp ISO và tái validate toàn bộ input
+
+### Kết quả
+- T15 hoàn thành ✅
+- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết tại form NPP
+- TypeScript: pass
+- Test suite: 8/8 pass
+- Smoke test POST chưa đăng nhập: trả đúng `401 Unauthorized`
+
+### Tasks liên quan
+- T15 ✅
+
+---
+
+## 2026-06-28 — Session 8: Fix Hydration + T16 Tab Nhiệm vụ
+
+### Yêu cầu
+- Sửa lỗi hydration crash tại AppLayout (`Đang kiểm tra đăng nhập` vs full layout)
+- Implement T16: Tab Nhiệm vụ — CRUD task, deadline, trạng thái
+
+### Công việc đã làm
+**Fix hydration (Issue-008):**
+- Xác định root cause: Better Auth đọc session từ cookie trong SSR → server render full layout; client bắt đầu với `isPending: true` → render loading state → mismatch
+- Lần 1: dùng `useState(false)` + `setIsMounted(true)` trong `useEffect` → ESLint React Compiler báo lỗi `react-hooks/set-state-in-effect`
+- Lần 2: thay bằng `useSyncExternalStore(noop, () => true, () => false)` — cách React chính thức để expose server/client snapshot khác nhau, không cần effect
+- Bổ sung rule `isMounted` pattern vào `project-conventions.md`, ghi Issue-008 vào `issues.md`
+
+**T16 — Tab Nhiệm vụ:**
+- Tạo `src/lib/validation/task.ts` — taskFormSchema, createTaskSchema, updateTaskSchema, enums
+- Tạo `GET/POST /api/companies/[id]/tasks` — Better Auth, RBAC, Zod validate
+- Tạo `PATCH/DELETE /api/tasks/[id]` — PATCH tự động set/clear completedAt theo status transition
+- Tạo `TasksTab.tsx` — TanStack Query, filter (all/active/done), quick status toggle, create/edit modal, delete with confirm
+- Tạo `TasksTab.module.css` — follow pattern TimelineTab, priority/status badges, deadline overdue highlight
+- Tích hợp TasksTab vào company detail page (thay PlaceholderTab T16)
+- Thêm 4 tests validation task
+
+### Quyết định quan trọng
+- **`useSyncExternalStore` cho hydration guard**: server snapshot = `false`, client snapshot = `true`. React 18 hydrates với server snapshot rồi schedule re-render với client snapshot mà không throw hydration error. Sạch hơn `setState` trong `useEffect`, không vi phạm React Compiler rule
+- **`completedAt` tự động theo status**: PATCH → DONE sets `completedAt = now()`; PATCH khỏi DONE clears `completedAt = null`; các transition khác không chạm `completedAt`
+- **assignedToId mặc định là người tạo**: MVP không cần UI chọn assignee — server tự dùng `session.user.id`; giảm form complexity
+- **Hard delete task**: Task model không có `deletedAt` → DELETE xóa cứng; acceptable vì task không có lịch sử cần giữ
+
+### Kết quả
+- Fix hydration: 0 errors, 0 warnings mới
+- T16 hoàn thành ✅
+- ESLint: 0 errors, 1 warning đã biết (React Hook Form/React Compiler tại form NPP)
+- TypeScript: pass
+- Test suite: 16/16 pass (4 test mới cho task validation)
+
+### Tasks liên quan
+- Issue-008 ✅ Fixed
+- T16 ✅
+
+---
+
+## 2026-06-28 — Session 12: T20 Versioning template (ban hành / nhân bản / lưu trữ)
+
+### Yêu cầu
+- Tiếp tục task tiếp theo sau T19 → T20 (versioning mẫu chấm điểm, đặc tả 7.7)
+
+### Công việc đã làm
+- API chuyển trạng thái (Admin only, đều check 401/403):
+  - `api/score-templates/[id]/publish/route.ts`: DRAFT → PUBLISHED, yêu cầu ≥1 tiêu chí (409 NO_CRITERIA), khóa cấu hình
+  - `api/score-templates/[id]/archive/route.ts`: PUBLISHED → ARCHIVED (ngừng áp dụng, không xóa cứng)
+  - `api/score-templates/[id]/clone/route.ts`: nhân bản sang DRAFT mới, copy toàn bộ tiêu chí, version = max version cùng tên + 1
+- UI `app/scoring/page.tsx`: thêm nút Ban hành / Nhân bản / Lưu trữ trong panel chi tiết; clone xong tự chọn mẫu mới; lockNotice hướng dẫn nhân bản; hiển thị lỗi chuyển trạng thái
+
+### Quyết định quan trọng
+- Nhân bản dùng version = max version trong các mẫu CÙNG TÊN + 1 (gom phiên bản theo tên), giữ lịch sử mẫu cũ nguyên vẹn
+- Nút "Nhân bản" cho phép ở mọi trạng thái (để sửa mẫu đã ban hành → tạo DRAFT mới); Ban hành chỉ khi DRAFT có tiêu chí; Lưu trữ chỉ khi PUBLISHED
+- KHÔNG dùng AuditLog cho lịch sử cấu hình template vì model AuditLog bắt buộc companyId (gắn NPP); lịch sử config-level hoãn lại (cần field/model riêng) — ghi nhận để xử lý sau
+- "Ngày hiệu lực" (effective date) trong spec 7.7 hoãn: schema ScoreTemplate chưa có field, cần migration — defer, không chặn luồng versioning cốt lõi
+
+### Kết quả
+- Quality gates: `tsc --noEmit` pass; eslint 0 errors (1 warning cũ); `npm test` 28/28 pass; smoke test publish/archive/clone đều trả 401 khi chưa đăng nhập
+- T20 → ✅ Done
+
+### Tasks liên quan
+- T20 (done). Tiếp theo: T21 (tab Chấm điểm theo NPP — phụ thuộc T19 + T20, đã sẵn sàng)
+
+---
+
+## 2026-06-28 — Session 11: T19 Logic tính điểm chuẩn hóa 0-100
+
+### Yêu cầu
+- Tiếp tục task tiếp theo sau T18 → T19 (công thức tính điểm, đặc tả 7.5)
+
+### Công việc đã làm
+- `lib/scoring/calculate.ts`: hàm thuần `calculateScore(criteria, inputs, policy)` — không phụ thuộc Prisma, tái sử dụng ở API chấm điểm (T21)
+  - Điểm quy đổi = (điểm thô / điểm tối đa) × trọng số; Điểm tổng = (Σ quy đổi / Σ trọng số được tính) × 100
+  - 3 chính sách dữ liệu thiếu: EXCLUDE (loại khỏi mẫu số), ZERO (cộng trọng số, 0 điểm), BLOCK (chặn hoàn tất)
+  - Trả thêm `dataCompleteness` (%), `isComplete`, `canFinalize`, chi tiết từng tiêu chí
+- `lib/scoring/calculate.test.ts`: 8 test (chuẩn hóa thang 100, điểm tuyệt đối, 3 policy, kẹp [0,maxScore], không có dữ liệu / mẫu rỗng — guard chia cho 0)
+
+### Quyết định quan trọng
+- Tách logic thành module thuần (no Prisma) để test nhanh + dùng lại cho T21 (tab chấm điểm) và preview ở T20
+- Kẹp điểm thô về [0, maxScore] để chống dữ liệu nhập sai thay vì throw (chấm điểm là thao tác thường xuyên, fail-soft)
+- `canFinalize` chỉ phụ thuộc policy BLOCK; EXCLUDE/ZERO cho phép hoàn tất với dữ liệu một phần (đúng đặc tả 7.5)
+- Ngưỡng phân loại A/B/C tách sang T24 (không gộp vào đây)
+
+### Kết quả
+- Quality gates: `tsc --noEmit` pass; eslint 0 errors (1 warning cũ); `npm test` 28/28 pass (thêm 8 test scoring, tổng 20→28)
+- T19 → ✅ Done
+
+### Tasks liên quan
+- T19 (done). Tiếp theo: T20 (versioning template) hoặc T21 (tab chấm điểm — phụ thuộc T19+T20)
+
+---
+
+## 2026-06-28 — Session 10: T18 Admin CRUD ScoreTemplate + ScoreCriteria
+
+### Yêu cầu
+- Tiếp tục task tiếp theo sau T17 → T18 (Phase 4: cấu hình module chấm điểm)
+
+### Công việc đã làm
+- `lib/auth-guard.ts`: thêm helper `requireAdmin()` trả về `{ session, isAdmin }`
+- `lib/validation/score-template.ts`: schema cho template (form/create/update) và criteria (form/create/update); `criteriaFormSchema` dùng `z.coerce.number().positive()` cho maxScore/weight
+- `lib/validation/score-template.test.ts`: 4 test (name bắt buộc, maxScore/weight phải dương, coerce string→number, update yêu cầu ≥1 field)
+- API:
+  - `api/score-templates/route.ts`: GET list + POST create (Admin only)
+  - `api/score-templates/[id]/route.ts`: GET detail (kèm criteria) + PUT (chỉ DRAFT, 409 TEMPLATE_LOCKED) + DELETE (chỉ DRAFT & chưa có results, 409)
+  - `api/score-templates/[id]/criteria/route.ts`: POST thêm tiêu chí (chỉ DRAFT, auto sortOrder = max+1)
+  - `api/score-criteria/[id]/route.ts`: PUT + DELETE (chỉ khi template DRAFT)
+- UI: `app/scoring/page.tsx` + `scoring.module.css` — master-detail, guard non-admin (accessDenied), CRUD template + criteria qua modal, khóa cấu hình khi template không phải DRAFT
+
+### Quyết định quan trọng
+- "Ẩn tiêu chí" = hard delete trong DRAFT, vì schema ScoreCriteria không có field isActive/deletedAt
+- DELETE template bị chặn nếu PUBLISHED hoặc đã có ScoreResult (toàn vẹn lịch sử chấm)
+- Trọng số chỉ cần số dương, không bắt buộc tổng = 100 (chuẩn hóa khi tính điểm — đặc tả 7.5)
+- Versioning (ban hành/nhân bản/lưu trữ) hoãn sang T20; công thức tính điểm T19
+- Auto-select mẫu đầu tiên dùng giá trị dẫn xuất `effectiveId` thay vì setState-in-effect (tránh lỗi React Compiler `react-hooks/set-state-in-effect`)
+
+### Kết quả
+- Quality gates: `tsc --noEmit` pass; `eslint` 0 errors (1 warning cũ ở companies/new); `npm test` 20/20 pass; smoke test `/api/score-templates` trả 401 khi chưa đăng nhập
+- T18 → ✅ Done
+
+### Tasks liên quan
+- T18 (done). Tiếp theo: T19 (logic tính điểm chuẩn hóa 0-100)
+
+---
+
+## 2026-06-28 — Session 9: T17 Dashboard + fix CSS token T16
+
+### Yêu cầu
+- Tiếp tục task tiếp theo sau T16
+- Implement T17: Dashboard — task quá hạn, follow-up hôm nay
+
+### Công việc đã làm
+**Fix CSS token TasksTab (phát sinh từ T16):**
+- Phát hiện `TasksTab.module.css` dùng nhiều CSS custom property không tồn tại trong `globals.css` (`--border-light`, `--border-medium`, `--bg-secondary`, `--bg-primary`, `--bg-tertiary`, `--text-tertiary`, `--color-danger-600/500/300/700`, `--color-success-600`)
+- Đối chiếu token thật trong `globals.css` và recreate file với token đúng: `--border-color`, `--bg-surface`, `--color-gray-100/300`, `--text-muted`, `--color-danger`, `--color-danger-light`, `--color-success`
+
+**T17 — Dashboard:**
+- Tạo `GET /api/dashboard` — Better Auth + RBAC, scope theo role (Admin toàn bộ, User theo `assignedToId`)
+- Trả về: totalCompanies, companiesByStatus (đủ 6 status kể cả 0), taskStats, overdueTasks (≤20), todayFollowUps (≤20)
+- Tính "hôm nay" theo giờ VN (UTC+7) cho follow-up; task quá hạn = status TODO/IN_PROGRESS và dueDate < đầu ngày hôm nay
+- Tạo `dashboard.module.css` với token đúng
+- Viết lại `dashboard/page.tsx`: KPI cards, phân bố trạng thái, 2 cột (task quá hạn + follow-up hôm nay), link tới hồ sơ NPP, dùng useSession thay cho hardcode "Admin"
+
+### Quyết định quan trọng
+- **Tính "hôm nay" theo UTC+7 ở server**: container chạy UTC, follow-up so sánh theo ranh giới ngày VN để khớp người dùng nội bộ
+- **companiesByStatus chuẩn hóa đủ status**: groupBy chỉ trả status có data → map về đủ 6 status (0 nếu thiếu) để UI ổn định
+- **Giới hạn 20 bản ghi mỗi danh sách**: dashboard chỉ cần snapshot, tránh query nặng
+- **Không thêm test mới**: T17 là read-only aggregation, không có validation logic mới; giữ nhất quán với T14 (cũng read-only)
+
+### Kết quả
+- T17 hoàn thành ✅; CSS token T16 đã sửa
+- ESLint: 0 errors, 1 warning đã biết (RHF/React Compiler)
+- TypeScript: pass
+- Test suite: 16/16 pass
+- Smoke test `GET /api/dashboard` chưa đăng nhập: trả đúng 401
+
+### Tasks liên quan
+- T17 ✅
+
+## 2026-06-28 — Session 7: Fix ASM phụ trách bị rỗng khi tạo NPP
+
+### Yêu cầu
+- Kiểm tra và sửa lỗi dropdown ASM không có giá trị, khiến user thường không tạo được NPP
+
+### Công việc đã làm
+- Xác định React Hook Form lấy `defaultValues` trước khi Better Auth session tải xong và không tự đồng bộ lại
+- Xác định auth client hardcode `localhost:3000` trong khi app được truy cập qua `localhost:3001`, khiến session request đi sai origin và Company API trả 401
+- Chuyển Better Auth client sang same-origin, cập nhật `BETTER_AUTH_URL` và tăng dev secret lên trên 32 ký tự
+- Bổ sung trang `/login`, auth guard tại AppLayout và thao tác đăng xuất
+- Dùng `setValue` trong effect để gán `assignedToId` ngay khi session user sẵn sàng
+- User thường hiển thị chính tài khoản hiện tại ở field ASM và không gọi API danh sách users
+- Admin vẫn tải và chọn ASM active từ `/api/users`, có loading/error state
+- API tạo Company cưỡng chế user thường tự gán cho chính mình, kể cả client thiếu hoặc giả mạo `assignedToId`
+- API kiểm tra assignee tồn tại và đang active trước khi tạo Company
+- Siết `GET /api/users` về đúng spec Admin-only
+- Thêm 4 regression tests cho logic phân công Company
+- Sửa test script bằng cách quote glob để `npm test` không bỏ sót test nằm ở thư mục sâu
+- Rebuild và recreate app container sau thay đổi `package.json`
+- Integration test bằng ASM seed: sign-in 200, get-session 200, Company API 200, Users API 403; session test đã được sign-out và thu hồi
+
+### Quyết định quan trọng
+- **Defense in depth cho assignee**: UI tự điền để UX đúng; API vẫn tự quyết định assignee cho user thường để không phụ thuộc dữ liệu client
+- **Auth client dùng same-origin**: không hardcode port trong browser; URL public được cấu hình tại environment của server
+- **User thường không cần danh sách users**: chỉ Admin được gọi `/api/users`, giảm lộ thông tin tài khoản và tránh request thừa
+- **Test discovery phải ổn định**: glob được quote để `tsx` tự tìm recursive, không để shell mở rộng khác nhau theo cấu trúc file
+
+### Kết quả
+- User thường thấy chính mình ở ASM phụ trách và có thể tạo NPP ✅
+- Người chưa đăng nhập được chuyển về `/login`; session hoạt động đúng trên `localhost:3001`
+- Admin vẫn chọn được ASM active
+- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết
+- TypeScript: pass
+- Test suite thực tế: 12/12 pass
+
+### Tasks liên quan
+- T5 ✅ (hoàn thiện auth flow)
+- T10 ✅ (bugfix Issue-006)
+
+---
+
 <!-- Thêm session mới ở đây -->

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,29 +41,49 @@ export default function NewCompanyPage() {
   const [serverError, setServerError] = useState("");
   const [duplicates, setDuplicates] = useState<DuplicateInfo[]>([]);
 
-  const user = sessionData?.user as { id: string; name: string; role?: string } | undefined;
+  const user = sessionData?.user as {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+  } | undefined;
+  const currentUserId = user?.id;
+  const isAdmin = user?.role === "ADMIN";
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<CompanyFormData>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
       status: "PROSPECT",
-      assignedToId: user?.id || "",
+      assignedToId: "",
     },
   });
 
-  // Fetch users for assign dropdown
-  const { data: usersData } = useQuery({
+  // Session được tải bất đồng bộ; user thường luôn tự nhận NPP của mình.
+  useEffect(() => {
+    if (currentUserId && !isAdmin) {
+      setValue("assignedToId", currentUserId, { shouldValidate: true });
+    }
+  }, [currentUserId, isAdmin, setValue]);
+
+  // Chỉ Admin cần tải danh sách để chọn ASM khác.
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers,
+    isError: isUsersError,
+  } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
       const res = await fetch("/api/users");
       if (!res.ok) throw new Error("Lỗi tải danh sách users");
       return res.json() as Promise<{ data: { id: string; name: string; email: string; role: string }[] }>;
     },
+    enabled: isAdmin,
   });
 
   // Check duplicate (debounced on blur)
@@ -338,19 +358,43 @@ export default function NewCompanyPage() {
                 <label className={styles.label} htmlFor="assignedToId">
                   ASM phụ trách<span className={styles.required}>*</span>
                 </label>
-                <select
-                  id="assignedToId"
-                  className={`${styles.select} ${errors.assignedToId ? styles.inputError : ""}`}
-                  {...register("assignedToId")}
-                  defaultValue={user?.id || ""}
-                >
-                  <option value="">— Chọn ASM —</option>
-                  {usersData?.data.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.email})
+                {isAdmin ? (
+                  <select
+                    id="assignedToId"
+                    className={`${styles.select} ${errors.assignedToId ? styles.inputError : ""}`}
+                    disabled={isLoadingUsers}
+                    {...register("assignedToId")}
+                  >
+                    <option value="">
+                      {isLoadingUsers ? "Đang tải ASM..." : "— Chọn ASM —"}
                     </option>
-                  ))}
-                </select>
+                    {usersData?.data.map((assignee) => (
+                      <option key={assignee.id} value={assignee.id}>
+                        {assignee.name} ({assignee.email})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <>
+                    <input type="hidden" {...register("assignedToId")} />
+                    <select
+                      id="assignedToId"
+                      className={styles.select}
+                      value={currentUserId || ""}
+                      disabled
+                      aria-label="ASM phụ trách"
+                    >
+                      <option value={currentUserId || ""}>
+                        {user ? `${user.name} (${user.email})` : "Đang tải tài khoản..."}
+                      </option>
+                    </select>
+                  </>
+                )}
+                {isAdmin && isUsersError && (
+                  <span className={styles.errorMessage}>
+                    Không tải được danh sách ASM. Vui lòng tải lại trang.
+                  </span>
+                )}
                 {errors.assignedToId && (
                   <span className={styles.errorMessage}>{errors.assignedToId.message}</span>
                 )}

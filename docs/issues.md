@@ -83,4 +83,34 @@
 - **Test added**: `src/lib/validation/contact.test.ts` — 4 tests cho required/default, influence enum và trim input
 - **Lesson learned**: Với Zod transform/default và React Hook Form, phải phân biệt `z.input` và `z.output`; schema dùng chung cần thể hiện rõ contract từng boundary.
 
+### [Issue-006] ASM phụ trách bị rỗng khi user thường tạo NPP
+
+- **Status**: 🟢 Fixed
+- **Severity**: High (chặn luồng tạo NPP chính)
+- **Phát hiện**: 2026-06-28 — User báo lỗi tại `/companies/new`
+- **Root cause**: Có hai lớp lỗi: (1) auth client hardcode `localhost:3000` trong khi app chạy tại `localhost:3001`, nên session rỗng và API trả 401; (2) form khởi tạo `defaultValues.assignedToId` trước khi session tải xong và React Hook Form không tự đồng bộ lại.
+- **Fix**: Dùng auth client same-origin, cấu hình Better Auth URL đúng port, thêm login/guard; đồng bộ assignee bằng `setValue` khi session sẵn sàng. User thường hiển thị field tự gán, Admin mới tải dropdown users. API luôn cưỡng chế user thường tự gán và validate assignee active.
+- **Test added**: `src/lib/company-assignment.test.ts` — 4 tests cho user tự gán, chống giả mạo, Admin chọn và Admin thiếu assignee
+- **Lesson learned**: Auth client trên web nhiều port phải dùng same-origin hoặc URL public đúng; không dùng session bất đồng bộ trực tiếp làm `defaultValues`; quyền sở hữu quan trọng phải được server quyết định lại.
+
+### [Issue-007] npm test bỏ sót test do shell mở rộng glob
+
+- **Status**: 🟢 Fixed
+- **Severity**: Medium (quality gate có thể xanh giả)
+- **Phát hiện**: 2026-06-28 — Sau khi thêm test Issue-006, `npm test` chỉ chạy 4 test mới thay vì toàn bộ suite
+- **Root cause**: Glob `src/**/*.test.ts` không được quote. Khi có test khớp ở `src/lib`, shell mở rộng pattern sớm và `tsx` không còn nhận glob để tìm recursive.
+- **Fix**: Quote glob trong test script: `tsx --test \"src/**/*.test.ts\"`.
+- **Test added**: N/A — xác minh bằng chính `npm test` trong image mới: discover đủ 3 test files, 12/12 tests pass
+- **Lesson learned**: Glob recursive trong npm scripts phải được quote để test runner, không phải shell, chịu trách nhiệm discovery.
+
+### [Issue-008] Hydration mismatch — AppLayout render khác nhau giữa server và client
+
+- **Status**: 🟢 Fixed
+- **Severity**: High (app crash ngay khi load, toàn bộ user thấy lỗi)
+- **Phát hiện**: 2026-06-28 — Hydration error tại `/dashboard`, trỏ về AppLayout.tsx line 49
+- **Root cause**: Trong Session 7, thêm `if (isPending || !sessionData) return <loading>` vào AppLayout. Better Auth đọc cookie trong SSR → server render full layout. Client khởi tạo với `isPending: true` → render loading state. Server vs client khác nhau → React hydration crash.
+- **Fix**: Thêm `isMounted` guard. Lúc đầu thử `useState(false)` + `useEffect(() => setIsMounted(true))` nhưng **fail lint React Compiler** (`react-hooks/set-state-in-effect`). Giải pháp cuối: `const isMounted = useSyncExternalStore(() => () => {}, () => true, () => false)`. Guard condition là `!isMounted || isPending || !sessionData`. Server và client initial đều render loading → match. Sau hydrate mới check session thật.
+- **Test added**: N/A — hydration error là runtime browser error, không test được bằng unit test hiện tại. Phát hiện bằng tay khi mở app.
+- **Lesson learned**: `"use client"` component trong Next.js App Router vẫn được SSR. Mọi component render có điều kiện dựa trên async state (auth, data) **BẮT BUỘC** dùng `isMounted` guard — và vì dự án bật **React Compiler**, KHÔNG được `setState` trong effect, phải dùng `useSyncExternalStore`. Đã cập nhật rule trong `project-conventions.md`. Quality gates (lint + tsc + unit test) không phát hiện được loại bug này — cần smoke test thủ công sau mỗi session chạm vào layout/auth.
+
 <!-- Thêm issues ở đây -->
