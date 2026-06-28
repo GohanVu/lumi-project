@@ -37,11 +37,11 @@
 
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
-| T9 | Trang danh sách NPP (bảng, lọc cơ bản, phân quyền) | ⬜ Todo | P1 | Admin thấy tất cả, User thấy của mình |
-| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ⬜ Todo | T9 | |
-| T11 | Trang hồ sơ NPP — layout tab (Tổng quan, Contact, Timeline, Task, Score, File, Log) | ⬜ Todo | T10 | |
-| T12 | Tab Người liên hệ — CRUD contact, đánh dấu contact chính | ⬜ Todo | T11 | |
-| T13 | Tìm kiếm NPP (tên, MST, SĐT) | ⬜ Todo | T9 | |
+| T9 | Trang danh sách NPP (bảng, lọc cơ bản, phân quyền) | ✅ Done | P1 | Admin thấy tất cả, User thấy của mình |
+| T10 | Form thêm NPP — cảnh báo trùng SĐT/MST | ✅ Done | T9 | |
+| T11 | Trang hồ sơ NPP — layout tab (Tổng quan, Contact, Timeline, Task, Score, File, Log) | ✅ Done | T10 | |
+| T12 | Tab Người liên hệ — CRUD contact, đánh dấu contact chính | ✅ Done | T11 | Shared validation, atomic primary contact, 4 tests |
+| T13 | Tìm kiếm NPP (tên, MST, SĐT) | ✅ Done | T9 | Đã implement cùng T9, reconcile Session 4 |
 
 ### Phase 3 (P3) — Tương tác & Nhiệm vụ
 
@@ -49,7 +49,7 @@
 
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
-| T14 | Tab Timeline — log tương tác theo thời gian | ⬜ Todo | P2 | |
+| T14 | Tab Timeline — log tương tác theo thời gian | ✅ Done | P2 | GET API + timeline UI, nhóm ngày theo giờ VN |
 | T15 | Form thêm tương tác — chọn loại, ghi nội dung, kết quả | ⬜ Todo | T14 | |
 | T16 | Tab Nhiệm vụ — CRUD task, deadline, trạng thái | ⬜ Todo | T14 | |
 | T17 | Dashboard — task quá hạn, follow-up hôm nay | ⬜ Todo | T16 | |

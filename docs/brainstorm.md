@@ -127,6 +127,101 @@ ScoreTemplate ──── ScoreResult (1:n)
 - Better Auth thay vì NextAuth → Nhẹ hơn, hỗ trợ role tốt hơn
 - TanStack Query → Rule project nhấn mạnh tránh bất đồng bộ gây đơ UI
 
+### API Endpoints (MVP)
+
+> Danh sách đầy đủ các API cần implement. Mỗi route tuân thủ:
+> - Auth: Better Auth session (cookie-based)
+> - Validate input: Zod
+> - Error format: `{ "error": "...", "code": "ERROR_CODE" }`
+> - Phân quyền: Admin thấy all, User chỉ thấy NPP assigned cho mình
+
+#### Auth (Better Auth — auto)
+
+| Method | Endpoint | Mô tả |
+|--------|----------|--------|
+| * | `/api/auth/[...all]` | Better Auth catch-all (sign-in, sign-up, session, sign-out) |
+
+#### Companies (NPP)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/companies` | Danh sách NPP (search, filter status, pagination, sort) | ✅ | Admin: all, User: assigned |
+| POST | `/api/companies` | Tạo NPP mới (cảnh báo trùng SĐT/MST) | ✅ | All |
+| GET | `/api/companies/[id]` | Chi tiết 1 NPP | ✅ | Owner/Admin |
+| PUT | `/api/companies/[id]` | Cập nhật NPP | ✅ | Owner/Admin |
+| DELETE | `/api/companies/[id]` | Soft delete NPP | ✅ | Admin |
+| GET | `/api/companies/check-duplicate` | Kiểm tra trùng SĐT/MST trước khi tạo | ✅ | All |
+
+#### Contacts (Người liên hệ)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/companies/[id]/contacts` | Danh sách contacts của 1 NPP | ✅ | Owner/Admin |
+| POST | `/api/companies/[id]/contacts` | Thêm contact | ✅ | Owner/Admin |
+| PUT | `/api/contacts/[id]` | Sửa contact | ✅ | Owner/Admin |
+| DELETE | `/api/contacts/[id]` | Soft delete contact | ✅ | Owner/Admin |
+
+#### Interactions (Nhật ký tương tác)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/companies/[id]/interactions` | Timeline tương tác của NPP | ✅ | Owner/Admin |
+| POST | `/api/companies/[id]/interactions` | Thêm tương tác (type, content, follow-up) | ✅ | Owner/Admin |
+| PUT | `/api/interactions/[id]` | Sửa tương tác | ✅ | Owner/Admin |
+| DELETE | `/api/interactions/[id]` | Xóa tương tác | ✅ | Owner/Admin |
+
+#### Tasks (Nhiệm vụ)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/tasks` | Danh sách task (filter: status, dueDate, overdue) | ✅ | Admin: all, User: assigned |
+| GET | `/api/companies/[id]/tasks` | Tasks của 1 NPP | ✅ | Owner/Admin |
+| POST | `/api/companies/[id]/tasks` | Tạo task cho NPP | ✅ | Owner/Admin |
+| PUT | `/api/tasks/[id]` | Cập nhật task (status, deadline) | ✅ | Assignee/Admin |
+| DELETE | `/api/tasks/[id]` | Xóa task | ✅ | Admin |
+
+#### Scoring (Chấm điểm)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/score-templates` | Danh sách mẫu chấm điểm | ✅ | All |
+| POST | `/api/score-templates` | Tạo mẫu mới | ✅ | Admin |
+| PUT | `/api/score-templates/[id]` | Sửa mẫu (chỉ khi DRAFT) | ✅ | Admin |
+| POST | `/api/score-templates/[id]/publish` | Ban hành mẫu (DRAFT → PUBLISHED) | ✅ | Admin |
+| POST | `/api/score-templates/[id]/archive` | Ngừng mẫu (→ ARCHIVED) | ✅ | Admin |
+| POST | `/api/score-templates/[id]/clone` | Nhân bản mẫu (tạo version mới) | ✅ | Admin |
+| GET | `/api/companies/[id]/scores` | Lịch sử chấm điểm NPP | ✅ | Owner/Admin |
+| POST | `/api/companies/[id]/scores` | Chấm điểm NPP | ✅ | Owner/Admin |
+| PUT | `/api/scores/[id]/override` | Ghi đè điểm (bắt buộc nhập lý do) | ✅ | Admin |
+
+#### Attachments (File đính kèm)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/companies/[id]/attachments` | Danh sách files NPP | ✅ | Owner/Admin |
+| POST | `/api/upload` | Upload file (multipart/form-data, max 10MB) | ✅ | Owner/Admin |
+| DELETE | `/api/attachments/[id]` | Soft delete file | ✅ | Owner/Admin |
+
+#### Users (Quản lý người dùng — Admin only)
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/users` | Danh sách users | ✅ | Admin |
+| POST | `/api/users` | Tạo user mới | ✅ | Admin |
+| PUT | `/api/users/[id]` | Sửa user (role, isActive) | ✅ | Admin |
+
+#### Dashboard
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/dashboard/stats` | KPIs: tổng NPP, theo status, tasks overdue, follow-up today | ✅ | Admin: all, User: assigned |
+
+#### Audit Logs
+
+| Method | Endpoint | Mô tả | Auth | Role |
+|--------|----------|--------|------|------|
+| GET | `/api/companies/[id]/audit-logs` | Lịch sử thay đổi per NPP | ✅ | Owner/Admin |
+
 ### Câu hỏi mở (để quyết định sau)
 
 - Cơ hội hợp tác (Opportunity) có trong MVP không hay phase 2?

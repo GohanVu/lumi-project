@@ -14,6 +14,7 @@ Khi bắt đầu project hoặc feature mới:
 - Brainstorm ý tưởng, CHƯA implement gì
 - AI hỏi ngược lại để clarify requirements
 - So sánh technical stack, phân tích trade-offs
+- Liệt kê đầy đủ API endpoints (method, path, mô tả, role) trước khi chuyển sang Planning
 - Khi đã đủ ý tưởng → lưu vào `docs/brainstorm.md`
 - Cập nhật steering nếu có quy ước mới
 
@@ -36,10 +37,21 @@ Sau brainstorm, tạo plan tại `docs/plan.md` bao gồm:
 
 Khi implement từng task:
 1. Đọc steering + plan + audit log
-2. Xác nhận task cần làm
-3. Implement
-4. Ghi kết quả vào audit log
-5. Update plan (đánh dấu task done)
+2. Đối chiếu trạng thái thực tế giữa `docs/plan.md`, `docs/audit-log.md`, `git status`/`git diff`, source code và kết quả quality gates. Nếu lệch, PHẢI báo rõ và lấy source + quality gates làm bằng chứng; không tự suy diễn theo riêng plan hoặc audit log.
+3. Xác nhận task cần làm và đổi task sang `🔄 In Progress` TRƯỚC khi sửa code
+4. Implement
+5. Chạy đầy đủ quality gates trong container: lint, TypeScript check, test liên quan (bug fix bắt buộc có test)
+6. Chỉ đổi task sang `✅ Done` khi code hoàn tất VÀ tất cả quality gates pass
+7. Trong cùng session, ghi kết quả vào audit log rồi cập nhật plan; không được cập nhật một file mà bỏ file còn lại
+
+### State Consistency Gate (bắt buộc)
+
+- `Todo`: chưa có implementation đang thực hiện.
+- `In Progress`: đã bắt đầu code, còn lỗi, chưa test xong hoặc session bị gián đoạn.
+- `Done`: implementation hoàn chỉnh, quality gates pass, audit log và plan đã đồng bộ.
+- Trước khi kết thúc session, PHẢI chạy lại `git status` và kiểm tra các task bị ảnh hưởng; code mới chưa commit vẫn phải được phản ánh đúng trong plan/audit.
+- Nếu phát hiện task đã có code nhưng plan còn `Todo`, hoặc plan là `Done` nhưng audit/quality gates thiếu, PHẢI sửa trạng thái/doc ngay trong session trước khi làm task tiếp theo.
+- Một task không được đánh dấu `Done` chỉ dựa trên việc file đã tồn tại hoặc UI nhìn có vẻ hoạt động.
 
 ## 4. Review Phase (định kỳ)
 

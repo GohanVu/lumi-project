@@ -7,6 +7,7 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test src/**/*.test.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
@@ -16,14 +17,18 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@tanstack/react-query": "^5.101.2",
     "better-auth": "^1.6.22",
     "dotenv": "^17.4.2",
     "next": "16.2.9",
     "pg": "^8.22.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.80.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20",

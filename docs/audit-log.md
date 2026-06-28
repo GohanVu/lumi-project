@@ -71,4 +71,114 @@
 
 ---
 
+## 2026-06-28 — Session 3: T9 + T10 — Danh sách NPP & Form thêm NPP
+
+### Yêu cầu
+- Implement T9: Trang danh sách NPP với bảng, lọc cơ bản, phân quyền
+- Implement T10: Form thêm NPP, cảnh báo trùng SĐT/MST
+
+### Công việc đã làm
+**T9:**
+- Cài đặt `@tanstack/react-query` v5 và `zod` v3
+- Tạo TanStack Query provider (`QueryProvider`) và wrap vào root layout
+- Tạo `src/lib/query-client.ts`, `src/lib/auth-guard.ts`
+- API `GET /api/companies` (auth, role filter, search, status filter, pagination, sort)
+- Trang `/companies` (bảng, search, filter, pagination, empty/loading/error states)
+
+**T10:**
+- Cài đặt `react-hook-form` + `@hookform/resolvers`
+- API `POST /api/companies` (Zod validate, duplicate check SĐT+MST, role check)
+- API `GET /api/companies/check-duplicate` (real-time check trước khi submit)
+- API `GET /api/users` (dropdown ASM phụ trách)
+- Trang `/companies/new` (React Hook Form + Zod, 3 sections: cơ bản, địa chỉ, phân loại)
+- Cảnh báo trùng onBlur (hiện link đến NPP đã tồn tại)
+- Bổ sung section API Endpoints vào brainstorm
+- Cập nhật steering workflow-guide (thêm rule liệt kê API trước planning)
+
+### Quyết định quan trọng
+- **Duplicate check 2 lớp**: (1) real-time onBlur via `/check-duplicate`, (2) server-side validate khi POST → đảm bảo không lọt
+- **Non-admin chỉ assign cho mình**: API trả 403 nếu user thường assign NPP cho người khác
+- **Status field required** thay vì default trong Zod schema → tránh type mismatch với RHF resolver
+- **react-hook-form watch() warning**: React Compiler incompatibility — acceptable, RHF chưa support RC
+
+### Kết quả
+- T9, T10 hoàn thành ✅
+- TypeScript compile clean
+- ESLint pass (1 warning — RHF/React Compiler known issue)
+- Brainstorm updated với full API list
+- Steering updated
+
+### Tasks liên quan
+- T9 ✅, T10 ✅
+
+---
+
+## 2026-06-28 — Session 4: Đồng bộ trạng thái & hoàn tất Phase 2
+
+### Yêu cầu
+- Phân tích nguyên nhân plan/audit/source bị lệch thông tin
+- Cập nhật rule để ngăn sai sót lặp lại
+- Tiếp tục hoàn thiện task kế tiếp
+
+### Công việc đã làm
+- Xác định state drift: T11 đã ghi Done nhưng thiếu audit; T12 đã có code nhưng plan còn Todo và quality gates chưa pass; T13 đã được implement cùng T9 nhưng chưa cập nhật plan
+- Thêm `State Consistency Gate` vào steering workflow: đối chiếu plan, audit, git, source và quality gates; bắt buộc chuyển In Progress trước khi code; chỉ Done sau khi lint/type/test pass; audit và plan phải cập nhật cùng session
+- Reconcile T11 (layout hồ sơ NPP) và T13 (tìm kiếm tên/MST/SĐT) theo source thực tế
+- Hoàn thiện T12: CRUD Contact, liên hệ chính, error state và accessibility cho modal
+- Tách schema Contact dùng chung giữa UI/API để tránh lệch validation
+- Bọc thao tác đổi liên hệ chính và create/update trong Prisma transaction
+- Thêm test runner bằng `node:test` + `tsx` và 4 test validation Contact
+- Thêm `.dockerignore`, giảm Docker build context từ khoảng 729 MB xuống 1.71 MB; rebuild và recreate app container thành công
+
+### Quyết định quan trọng
+- **Done là trạng thái có bằng chứng**: file tồn tại chưa đủ; lint, TypeScript, test, audit và plan phải đồng bộ
+- **Schema UI và API dùng chung**: form yêu cầu `isPrimary` rõ ràng, API vẫn default `false` khi client bỏ qua field
+- **Đổi primary contact phải atomic**: unset contact cũ và create/update contact mới nằm trong cùng transaction
+- **Test framework tối giản**: dùng `node:test` qua dependency `tsx` đã có, chưa thêm framework mới khi project chưa chốt testing stack
+
+### Kết quả
+- Phase 2 (T9–T13) hoàn thành ✅
+- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết tại form NPP
+- TypeScript: pass
+- Contact tests: 4/4 pass
+- App, PostgreSQL và Nginx đang chạy healthy sau rebuild
+
+### Tasks liên quan
+- T11 ✅ (reconcile audit)
+- T12 ✅
+- T13 ✅ (reconcile plan)
+
+---
+
+## 2026-06-28 — Session 5: T14 — Timeline tương tác
+
+### Yêu cầu
+- Implement riêng T14: Tab Timeline hiển thị nhật ký tương tác theo thời gian
+- Không implement form thêm tương tác của T15
+
+### Công việc đã làm
+- Tạo API `GET /api/companies/[id]/interactions`
+- Áp dụng Better Auth và RBAC: Admin xem tất cả, User chỉ xem NPP được phân công
+- Query interaction mới nhất trước, trả kèm người tạo, loại tương tác, nội dung, kết quả, người liên hệ và lịch follow-up
+- Tạo `TimelineTab` dùng TanStack Query với loading, error/retry và empty state
+- Hiển thị timeline dọc, nhóm theo ngày giờ Việt Nam, phân màu theo loại tương tác
+- Tích hợp TimelineTab vào trang hồ sơ NPP, thay placeholder T14
+
+### Quyết định quan trọng
+- **Giữ đúng boundary T14/T15**: T14 chỉ đọc và trình bày timeline; thao tác thêm tương tác để riêng cho T15
+- **Timezone hiển thị cố định**: dùng `Asia/Ho_Chi_Minh` để ngày/giờ nhất quán với người dùng nội bộ Việt Nam
+- **Ẩn tài nguyên trái quyền bằng 404**: reuse pattern Company/Contact hiện có để không tiết lộ NPP tồn tại cho user không được phân công
+
+### Kết quả
+- T14 hoàn thành ✅
+- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết tại form NPP
+- TypeScript: pass
+- Test suite: 4/4 pass
+- Smoke test endpoint chưa đăng nhập: trả đúng `401 Unauthorized`
+
+### Tasks liên quan
+- T14 ✅
+
+---
+
 <!-- Thêm session mới ở đây -->
