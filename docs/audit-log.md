@@ -10,43 +10,6 @@
 
 ---
 
-## 2026-06-28 — Session 13: T21 Tab Chấm điểm NPP
-
-### Yêu cầu
-- Tạo checkpoint cho T15–T20 đã hoàn thành
-- Implement T21: chấm điểm NPP theo template, tự tính điểm và xem chi tiết
-
-### Công việc đã làm
-- Chạy quality gates và commit checkpoint T15–T20 tại `e11ec17`
-- Tạo validation `score-result.ts` cho form và API, gồm chính sách dữ liệu thiếu và chống trùng tiêu chí
-- Tạo `GET /api/companies/[id]/scores`: trả lịch sử chấm, chi tiết tiêu chí, độ hoàn thiện và template PUBLISHED khả dụng
-- Tạo `POST /api/companies/[id]/scores`: RBAC theo NPP, validate template/criteria/maxScore, tính lại điểm ở server
-- Lưu `ScoreResult`, `ScoreResultDetail` và AuditLog `SCORE` trong cùng Prisma transaction
-- Tạo `ScoresTab`: kết quả gần nhất, lịch sử, panel chi tiết cách tính, modal chấm điểm động theo template
-- Live preview tự động tính tổng điểm 0–100 và độ hoàn thiện khi nhập điểm thô
-- Hỗ trợ ba policy EXCLUDE / ZERO / BLOCK từ đặc tả 7.5
-- Thêm 4 tests validation score result
-- Integration test có fixture tạm: GET 200, POST 201, lưu đúng 80/100 từ 8/10, completeness 100%, có audit SCORE; đã dọn fixture và thu hồi session
-
-### Quyết định quan trọng
-- **Server là nguồn sự thật cho tổng điểm**: client chỉ preview; API luôn tính lại bằng `calculateScore`, không nhận totalScore từ client
-- **Chỉ dùng template PUBLISHED**: kết quả mới luôn gắn đúng template/version đã khóa; template DRAFT/ARCHIVED không được chấm mới
-- **Tiêu chí thiếu không tạo detail row**: độ hoàn thiện được suy ra bằng cách so result details với toàn bộ criteria của đúng template version
-- **Tự động trong T21 là tự động tính công thức**: schema hiện chưa có mapping tiêu chí ↔ field Company nên chưa tự lấy điểm thô từ hồ sơ; việc này cần mở rộng model cấu hình sau
-- **Grade để T24**: T21 lưu `grade = null` và hiển thị “Chưa phân loại” cho đến khi có ngưỡng A/B/C cấu hình
-
-### Kết quả
-- T21 hoàn thành ✅
-- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết
-- TypeScript: pass
-- Test suite: 32/32 pass
-- Integration test DB/API pass và không để lại dữ liệu test
-
-### Tasks liên quan
-- T21 ✅
-
----
-
 ## 2026-06-28 — Session 14: Fix danh sách NPP stale sau khi tạo
 
 ### Yêu cầu
@@ -169,6 +132,63 @@
 ### Tasks liên quan
 - T21 ✅
 - T22 ✅
+
+---
+
+## 2026-06-30 — Session 18: T23 So sánh các lần chấm điểm
+
+### Yêu cầu
+- Làm task tiếp theo sau T22 → T23 (lịch sử chấm điểm, so sánh các lần chấm)
+
+### Công việc đã làm
+- Khảo sát code scoring hiện có qua codebase graph: phần "lịch sử các lần chấm" đã có sẵn trong `ScoresTab` từ T21; T23 chỉ còn thiếu phần **so sánh**
+- Xác nhận `GET /api/companies/[id]/scores` đã trả đủ details + criteria cho mọi lần chấm → so sánh hoàn toàn client-side, KHÔNG đụng API/schema
+- `ScoresTab.tsx`: thêm chế độ so sánh (compare mode) — nút "So sánh" (chỉ hiện khi ≥2 lần chấm), chọn tối đa 2 lần chấm trong danh sách, badge số thứ tự
+- Thêm component thuần `ScoreComparePanel` + helper `buildCriteriaMap`/`formatDelta`: bảng so sánh điểm tổng, độ hoàn thiện, và từng tiêu chí (union criteria của cả 2 phiên bản template), hiển thị delta tăng/giảm theo màu
+- `ScoresTab.module.css`: thêm style compare (toggle, badge, summary 3 cột, bảng so sánh, delta up/down/flat) dùng đúng token có sẵn trong globals
+- Verify thủ công 9 CSS token tồn tại trong globals.css trước khi chạy gates (theo bài học Issue Session 9 — gates không bắt CSS token sai)
+
+### Quyết định quan trọng
+- **So sánh thuần client-side**: GET đã trả đủ dữ liệu; không thêm endpoint/migration — đúng tinh thần Surgical Changes + MVP
+- **Sắp xếp 2 lần chấm cũ → mới ("Trước"/"Sau")**: delta = Sau − Trước, đọc thay đổi theo thời gian tự nhiên
+- **Union tiêu chí theo id**: hai lần chấm có thể dùng template version khác nhau; tiêu chí chỉ có ở một bên hiển thị "—", delta chỉ tính khi cả hai có điểm
+- **Không thêm test**: T23 read-only, logic hiển thị trong component — nhất quán tiền lệ T14/T17 (read-only không thêm unit test)
+
+### Kết quả
+- T23 hoàn thành ✅
+- TypeScript: pass (sau khi dọn artifact `.next/dev/types` bị dev-server ghi hỏng — không liên quan code T23)
+- ESLint: 0 errors, còn 1 warning React Hook Form/React Compiler đã biết tại companies/new
+- Test suite: 39/39 pass
+- Lưu ý: chưa smoke test trên browser (cần seed ≥2 lần chấm cho 1 NPP); không có thay đổi API/layout/auth nên rủi ro thấp
+
+### Tasks liên quan
+- T23 ✅. Tiếp theo: T24 — phân loại A/B/C theo ngưỡng Admin cấu hình
+
+---
+
+## 2026-06-30 — Session 19: Phân tích tối ưu codebase + lập Phase 7
+
+### Yêu cầu
+- Đánh giá dự án đã tối ưu code chưa; ghi các phần tối ưu vào plan để làm sau cùng
+- (Mobile display tách riêng — cần brainstorm thêm, chưa chốt task)
+
+### Công việc đã làm
+- Re-index repo, truy vấn metric qua codebase graph: complexity, loop_depth, transitive_loop_depth, linear_scan_in_loop, alloc_in_loop, param_count cho toàn bộ ~140 hàm
+- Kiểm tra tầng DB: index trong schema, dùng Promise.all, dấu hiệu N+1 (await-in-loop / map(async))
+- Thêm Phase 7 (Tối ưu — làm sau cùng) vào plan: T34 (DB index), T35 (refactor component phức tạp), T36 (đo bundle/re-render/query plan)
+
+### Kết quả phân tích
+- **Thuật toán/JS: sạch** — không vòng lặp lồng nhau, không O(n²), không linear-scan-in-loop, param ≤3, không phát hiện N+1, có Promise.all. JS không phải bottleneck (app CRUD)
+- **Complexity smell (maintainability, không phải perf)**: TasksTab cog 14, TemplateDetailPanel 13, POST companies / POST scores 13, ScoresTab 10, PUT companies 12
+- **Gap thật = DB index**: schema chỉ có 3 @unique (email, token, taxCode); thiếu index trên FK companyId và các cột filter/sort nóng (assignedToId, status, dueDate, createdAt...). Postgres không tự index FK → T34
+- **Giới hạn**: graph chỉ thấy cấu trúc tĩnh — không đo được bundle size, React re-render, query plan thực tế → gom vào T36
+
+### Quyết định quan trọng
+- Tối ưu xếp Phase 7, KHÔNG chặn deploy (P6); ưu tiên cao nhất là T34 (DB index — giá trị cao, 1 migration)
+- Mobile/responsive là mảng lớn → brainstorm riêng trước khi thành task, chưa đưa vào plan
+
+### Tasks liên quan
+- Thêm T34, T35, T36 (Phase 7). Mobile: chờ brainstorm
 
 ---
 

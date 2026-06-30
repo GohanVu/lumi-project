@@ -65,7 +65,7 @@
 | T20 | Versioning template — Ban hành, Nhân bản, Ngừng | ✅ Done | T18 | Khóa config khi ban hành |
 | T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ✅ Done | T19, T20 | Dynamic form, server calculation, detail/history, 4 tests |
 | T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ✅ Done | T21 | Giữ điểm hệ thống, Admin-only, audit trước/sau, 5 tests |
-| T23 | Lịch sử chấm điểm — so sánh các lần chấm | ⬜ Todo | T21 | |
+| T23 | Lịch sử chấm điểm — so sánh các lần chấm | ✅ Done | T21 | So sánh 2 lần chấm cạnh nhau (client-side, không đụng API/schema) |
 | T24 | Phân loại A/B/C — ngưỡng Admin tự cấu hình | ⬜ Todo | T19 | |
 
 ### Phase 5 (P5) — File & Dashboard
@@ -91,12 +91,23 @@
 | T32 | Deploy lên VPS LANIT, cấu hình Nginx + HTTPS | ⬜ Todo | T31 | |
 | T33 | Test end-to-end với user thật | ⬜ Todo | T32 | |
 
+### Phase 7 (P7) — Tối ưu (LÀM SAU CÙNG)
+
+> Mục tiêu: Tối ưu hiệu năng & maintainability sau khi MVP chạy ổn. Không chặn deploy.
+> Nguồn: phân tích codebase graph (2026-06-30) — chi tiết trong audit-log Session 19.
+
+| Task ID | Mô tả | Status | Dependencies | Notes |
+|---------|--------|--------|--------------|-------|
+| T34 | Thêm DB index cho cột query nóng | ⬜ Todo | P6 | Company(assignedToId, status, createdAt), companyId trên Contact/Interaction/Task/ScoreResult/AuditLog, Task(dueDate,status), ScoreCriteria(templateId), ScoreResultDetail(resultId). Postgres không tự index FK. Cần migration |
+| T35 | Refactor component phức tạp cao | ⬜ Todo | P6 | Tách TasksTab (cog 14), TemplateDetailPanel (13), ScoresTab (10) — gom modal/handler ra component con. Maintainability, không phải perf |
+| T36 | Đo & tối ưu thứ graph không thấy | ⬜ Todo | T32 | Bundle size, React re-render thừa, query plan thực tế khi data lớn — cần đo bằng tool runtime, không suy từ static graph |
+
 ---
 
 ## Critical Path
 
 ```
-P1 (Setup) → P2 (NPP + Contact) → P3 (Tương tác + Task) → P4 (Scoring) → P5 (File + Dashboard) → P6 (Deploy)
+P1 (Setup) → P2 (NPP + Contact) → P3 (Tương tác + Task) → P4 (Scoring) → P5 (File + Dashboard) → P6 (Deploy) → P7 (Tối ưu — sau cùng)
 ```
 
 ## Ngoài scope MVP (Phase 2 sau)

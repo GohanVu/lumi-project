@@ -102,6 +102,8 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [overrideTarget, setOverrideTarget] = useState<ScoreResult | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.companies.scores(companyId),
@@ -210,9 +212,34 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
   const selectedResult =
     results.find((result) => result.id === selectedResultId) ?? latest;
 
+  // Hai lần chấm đang chọn để so sánh, sắp xếp cũ → mới để đọc thay đổi theo thời gian.
+  const compareResults = compareIds
+    .map((id) => results.find((result) => result.id === id))
+    .filter((result): result is ScoreResult => Boolean(result))
+    .sort(
+      (a, b) => new Date(a.scoredAt).getTime() - new Date(b.scoredAt).getTime()
+    );
+
   const openForm = () => {
     createMutation.reset();
     setShowForm(true);
+  };
+
+  const toggleCompareMode = () => {
+    setCompareMode((prev) => !prev);
+    setCompareIds([]);
+  };
+
+  const handleHistoryClick = (id: string) => {
+    if (!compareMode) {
+      setSelectedResultId(id);
+      return;
+    }
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((value) => value !== id);
+      if (prev.length < 2) return [...prev, id];
+      return [prev[1], id]; // bỏ lựa chọn cũ nhất, giữ tối đa 2
+    });
   };
 
   return (
@@ -260,37 +287,77 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
 
           <div className={styles.contentGrid}>
             <div className={styles.historyPanel}>
-              <h4 className={styles.panelTitle}>Các lần chấm</h4>
-              <div className={styles.historyList}>
-                {results.map((result) => (
+              <div className={styles.historyHeader}>
+                <h4 className={styles.panelTitle}>Các lần chấm</h4>
+                {results.length >= 2 && (
                   <button
-                    key={result.id}
                     type="button"
-                    className={`${styles.historyItem} ${
-                      selectedResult?.id === result.id ? styles.historyItemActive : ""
+                    className={`${styles.compareToggle} ${
+                      compareMode ? styles.compareToggleActive : ""
                     }`}
-                    onClick={() => setSelectedResultId(result.id)}
+                    onClick={toggleCompareMode}
                   >
-                    <span className={styles.historyScore}>{result.totalScore.toFixed(2)}</span>
-                    <span className={styles.historyInfo}>
-                      <strong>{result.template.name} v{result.template.version}</strong>
-                      <small>{dateTimeFormatter.format(new Date(result.scoredAt))}</small>
-                      {result.isOverridden && <small>Đã điều chỉnh</small>}
-                    </span>
+                    {compareMode ? "Hủy so sánh" : "So sánh"}
                   </button>
-                ))}
+                )}
+              </div>
+              {compareMode && (
+                <p className={styles.compareHint}>
+                  Chọn 2 lần chấm để so sánh ({compareIds.length}/2).
+                </p>
+              )}
+              <div className={styles.historyList}>
+                {results.map((result) => {
+                  const compareIndex = compareIds.indexOf(result.id);
+                  const isActive = compareMode
+                    ? compareIndex !== -1
+                    : selectedResult?.id === result.id;
+                  return (
+                    <button
+                      key={result.id}
+                      type="button"
+                      className={`${styles.historyItem} ${
+                        isActive ? styles.historyItemActive : ""
+                      }`}
+                      onClick={() => handleHistoryClick(result.id)}
+                    >
+                      <span className={styles.historyScore}>{result.totalScore.toFixed(2)}</span>
+                      <span className={styles.historyInfo}>
+                        <strong>{result.template.name} v{result.template.version}</strong>
+                        <small>{dateTimeFormatter.format(new Date(result.scoredAt))}</small>
+                        {result.isOverridden && <small>Đã điều chỉnh</small>}
+                      </span>
+                      {compareMode && compareIndex !== -1 && (
+                        <span className={styles.compareBadge}>{compareIndex + 1}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {selectedResult && (
-              <ScoreDetailPanel
-                result={selectedResult}
-                canOverride={canOverride}
-                onOverride={() => {
-                  overrideMutation.reset();
-                  setOverrideTarget(selectedResult);
-                }}
-              />
+            {compareMode ? (
+              compareResults.length === 2 ? (
+                <ScoreComparePanel
+                  older={compareResults[0]}
+                  newer={compareResults[1]}
+                />
+              ) : (
+                <div className={styles.comparePrompt}>
+                  Chọn đủ 2 lần chấm ở danh sách bên trái để xem bảng so sánh.
+                </div>
+              )
+            ) : (
+              selectedResult && (
+                <ScoreDetailPanel
+                  result={selectedResult}
+                  canOverride={canOverride}
+                  onOverride={() => {
+                    overrideMutation.reset();
+                    setOverrideTarget(selectedResult);
+                  }}
+                />
+              )
             )}
           </div>
         </>
@@ -396,6 +463,131 @@ function ScoreDetailPanel({
                 Trọng số {criterion.weight} · Điểm quy đổi {converted.toFixed(2)}
               </div>
               {detail?.note && <div className={styles.criteriaNote}>{detail.note}</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface CriteriaCell {
+  name: string;
+  maxScore: number;
+  score: number | null;
+}
+
+function buildCriteriaMap(result: ScoreResult): Map<string, CriteriaCell> {
+  const map = new Map<string, CriteriaCell>();
+  for (const criterion of result.template.criteria) {
+    map.set(criterion.id, {
+      name: criterion.name,
+      maxScore: criterion.maxScore,
+      score: null,
+    });
+  }
+  for (const detail of result.details) {
+    const existing = map.get(detail.criteria.id);
+    if (existing) {
+      existing.score = detail.score;
+    } else {
+      map.set(detail.criteria.id, {
+        name: detail.criteria.name,
+        maxScore: detail.criteria.maxScore,
+        score: detail.score,
+      });
+    }
+  }
+  return map;
+}
+
+function formatDelta(value: number) {
+  return value > 0 ? `+${value.toFixed(2)}` : value.toFixed(2);
+}
+
+function ScoreComparePanel({
+  older,
+  newer,
+}: {
+  older: ScoreResult;
+  newer: ScoreResult;
+}) {
+  const olderMap = buildCriteriaMap(older);
+  const newerMap = buildCriteriaMap(newer);
+
+  // Union các tiêu chí của cả hai lần chấm (template có thể khác phiên bản).
+  const criteriaIds: string[] = [];
+  const seen = new Set<string>();
+  for (const criterion of [...older.template.criteria, ...newer.template.criteria]) {
+    if (!seen.has(criterion.id)) {
+      seen.add(criterion.id);
+      criteriaIds.push(criterion.id);
+    }
+  }
+
+  const totalDelta = newer.totalScore - older.totalScore;
+  const completenessDelta = newer.dataCompleteness - older.dataCompleteness;
+
+  const deltaClass = (value: number) => {
+    if (value > 0) return styles.deltaUp;
+    if (value < 0) return styles.deltaDown;
+    return styles.deltaFlat;
+  };
+
+  const renderCell = (cell: CriteriaCell | undefined) =>
+    !cell
+      ? "—"
+      : cell.score === null
+        ? "Thiếu"
+        : `${cell.score}/${cell.maxScore}`;
+
+  return (
+    <div className={styles.detailPanel}>
+      <h4 className={styles.panelTitle}>So sánh hai lần chấm</h4>
+
+      <div className={styles.compareSummary}>
+        <div className={styles.compareSummaryCol}>
+          <span>Trước</span>
+          <strong>{older.totalScore.toFixed(2)}</strong>
+          <small>{dateTimeFormatter.format(new Date(older.scoredAt))}</small>
+          <small>{older.template.name} v{older.template.version}</small>
+        </div>
+        <div className={styles.compareSummaryCol}>
+          <span>Sau</span>
+          <strong>{newer.totalScore.toFixed(2)}</strong>
+          <small>{dateTimeFormatter.format(new Date(newer.scoredAt))}</small>
+          <small>{newer.template.name} v{newer.template.version}</small>
+        </div>
+        <div className={styles.compareSummaryCol}>
+          <span>Thay đổi</span>
+          <strong className={deltaClass(totalDelta)}>{formatDelta(totalDelta)}</strong>
+          <small>Hoàn thiện {formatDelta(completenessDelta)}%</small>
+        </div>
+      </div>
+
+      <div className={styles.compareTable}>
+        <div className={`${styles.compareRow} ${styles.compareHead}`}>
+          <span>Tiêu chí</span>
+          <span>Trước</span>
+          <span>Sau</span>
+          <span>Δ</span>
+        </div>
+        {criteriaIds.map((id) => {
+          const olderCell = olderMap.get(id);
+          const newerCell = newerMap.get(id);
+          const name = olderCell?.name ?? newerCell?.name ?? "—";
+          const delta =
+            olderCell?.score != null && newerCell?.score != null
+              ? newerCell.score - olderCell.score
+              : null;
+          return (
+            <div key={id} className={styles.compareRow}>
+              <span className={styles.compareCriteria}>{name}</span>
+              <span>{renderCell(olderCell)}</span>
+              <span>{renderCell(newerCell)}</span>
+              <span className={delta != null ? deltaClass(delta) : undefined}>
+                {delta != null ? formatDelta(delta) : "—"}
+              </span>
             </div>
           );
         })}

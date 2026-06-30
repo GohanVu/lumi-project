@@ -123,4 +123,14 @@
 - **Test added**: `src/lib/company-queries.test.ts` xác minh cache list mặc định và có filter/phân trang đều stale nhưng detail không bị ảnh hưởng; `src/lib/query-key-conventions.test.ts` fail nếu application code khai báo raw query key ngoài factory.
 - **Lesson learned**: Mọi mutation làm thay đổi collection phải invalidate query prefix trước khi điều hướng; `router.push`/`router.refresh` không thay thế việc đồng bộ TanStack Query cache. Quy tắc quan trọng nên có automated guard, không chỉ dựa vào checklist thủ công.
 
+### [Issue-010] Toàn bộ route 404 sau khi xóa thủ công file trong .next khi dev server đang chạy
+
+- **Status**: 🟢 Fixed
+- **Severity**: Medium (app tê liệt tạm thời, mọi route 404; chỉ ảnh hưởng môi trường dev)
+- **Phát hiện**: 2026-06-30 — User báo `localhost:3001` trả 404 "This page could not be found" ở mọi route
+- **Root cause**: Khi verify TypeScript (T23), AI chạy `rm -rf .next/dev/types` **bên trong container đang chạy `next dev`** để bỏ artifact type bị ghi hỏng. Việc xóa file build khi dev server đang chạy làm hỏng route manifest → Next không resolve được route nào, tất cả 404. Log xác nhận: các route `/scoring`, `/companies`, `/dashboard` trả 200 trước thời điểm xóa, sau đó đồng loạt 404.
+- **Fix**: `docker compose restart app` để Next sinh lại `.next` sạch. Sau restart: `/` → 307 `/dashboard`, `/dashboard` 200, `/login` 200.
+- **Test added**: N/A — lỗi thao tác môi trường dev, không phải code bug.
+- **Lesson learned**: KHÔNG xóa/sửa file trong `.next/` khi `next dev` đang chạy. Nếu artifact dev (`.next/dev/types`) hỏng và cần regenerate sạch → dùng `docker compose restart app`, không `rm` trực tiếp. Lỗi type trong `.next/dev/types/*` là noise dev-server tự sinh, không phản ánh code thật — fix đúng là restart, không phải xóa tay.
+
 <!-- Thêm issues ở đây -->
