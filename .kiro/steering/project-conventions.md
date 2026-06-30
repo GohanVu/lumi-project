@@ -12,6 +12,23 @@ File này định hướng AI hiểu các quy ước riêng của project. Khi i
 3. **Ghi lại quyết định**: Mọi quyết định kỹ thuật quan trọng phải được ghi vào audit log.
 4. **BẮT BUỘC đọc mỗi session**: plan.md, brainstorm.md, issues.md (đọc đủ), và audit-log.md (chỉ phần session gần nhất còn trong file — KHÔNG cần đọc archive trừ khi cần truy nguyên quyết định cũ).
 
+## Surgical Changes — chỉ sửa cái tối thiểu
+
+Khi implement hoặc fix, giới hạn thay đổi đúng phạm vi task yêu cầu:
+
+- **Chỉ động vào code cần cho task.** KHÔNG refactor, đổi format, đổi tên, hay "cải thiện" code lân cận đang chạy tốt — kể cả khi thấy nó chưa đẹp. Muốn dọn → ghi vào `issues.md` hoặc đề xuất riêng, không gộp vào diff hiện tại.
+- **Match pattern hiện có.** Code mới đọc phải giống code xung quanh (naming, cấu trúc, style); không áp phong cách riêng.
+- **Chỉ xóa thứ chính bạn làm thừa.** Xóa import/biến mà sửa đổi của BẠN làm orphan; dead code có sẵn từ trước để yên trừ khi task yêu cầu dọn.
+- **Sửa lại file thay vì viết đè toàn bộ.** Ưu tiên edit phần cần đổi; KHÔNG recreate cả file khi chỉ cần sửa vài dòng (tránh lặp lại kiểu rewrite nguyên file CSS chỉ vì sai vài token).
+- **Diff nhỏ là mục tiêu.** Diff càng tập trung càng dễ review và càng ít rủi ro regression.
+
+## Anti-over-engineering — đủ dùng, không thừa
+
+- **Code tối thiểu giải đúng bài toán.** KHÔNG thêm tính năng không được yêu cầu, không "phòng xa" cho trường hợp chưa tồn tại.
+- **Không abstraction cho thứ dùng 1 lần.** Chỉ tách helper/lớp/generic khi đã có ≥2 chỗ dùng thật hoặc yêu cầu rõ ràng. Đây là dự án MVP — ưu tiên đơn giản hơn linh hoạt.
+- **Không xử lý lỗi cho edge case không xảy ra.** Validate input ở boundary (đã có Zod) là đủ; đừng bọc try/catch phòng thủ tràn lan.
+- **Tự kiểm tra trước khi đánh dấu Done:** "Một senior engineer có thấy cách này bị over-engineer không?" Nếu nghi ngờ phức tạp thừa → hỏi trước khi code, đừng tự quyết thầm.
+
 ## Tham chiếu bắt buộc
 
 Khi bắt đầu một session mới hoặc implement task mới, AI PHẢI đọc:
