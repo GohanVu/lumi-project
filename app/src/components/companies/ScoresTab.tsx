@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { calculateScore } from "@/lib/scoring/calculate";
+import {
+  compareScoreResults,
+  type ComparableScoreResult,
+} from "@/lib/scoring/compare";
 import { queryKeys } from "@/lib/query-keys";
 import { invalidateScoreOverride } from "@/lib/score-queries";
 import {
@@ -102,6 +106,8 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
   const [overrideTarget, setOverrideTarget] = useState<ScoreResult | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.companies.scores(companyId),
@@ -189,6 +195,15 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
     },
   });
 
+  const comparison = useMemo(() => {
+    if (compareIds.length !== 2) return null;
+    const all = data?.data ?? [];
+    const first = all.find((r) => r.id === compareIds[0]);
+    const second = all.find((r) => r.id === compareIds[1]);
+    if (!first || !second) return null;
+    return compareScoreResults(toComparable(first), toComparable(second));
+  }, [compareIds, data]);
+
   if (isLoading) {
     return <div className={styles.loading}>Đang tải dữ liệu chấm điểm...</div>;
   }
@@ -213,6 +228,25 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
   const openForm = () => {
     createMutation.reset();
     setShowForm(true);
+  };
+
+  const toggleCompareMode = () => {
+    setCompareMode((prev) => {
+      if (prev) setCompareIds([]);
+      return !prev;
+    });
+  };
+
+  const handleHistoryClick = (resultId: string) => {
+    if (!compareMode) {
+      setSelectedResultId(resultId);
+      return;
+    }
+    setCompareIds((prev) => {
+      if (prev.includes(resultId)) return prev.filter((id) => id !== resultId);
+      if (prev.length >= 2) return [prev[1], resultId]; // giữ lựa chọn mới nhất
+      return [...prev, resultId];
+    });
   };
 
   return (
@@ -260,37 +294,74 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
 
           <div className={styles.contentGrid}>
             <div className={styles.historyPanel}>
-              <h4 className={styles.panelTitle}>Các lần chấm</h4>
-              <div className={styles.historyList}>
-                {results.map((result) => (
+              <div className={styles.historyHeader}>
+                <h4 className={styles.panelTitle}>Các lần chấm</h4>
+                {results.length >= 2 && (
                   <button
-                    key={result.id}
                     type="button"
-                    className={`${styles.historyItem} ${
-                      selectedResult?.id === result.id ? styles.historyItemActive : ""
+                    className={`${styles.compareToggle} ${
+                      compareMode ? styles.compareToggleActive : ""
                     }`}
-                    onClick={() => setSelectedResultId(result.id)}
+                    onClick={toggleCompareMode}
+                    aria-pressed={compareMode}
                   >
-                    <span className={styles.historyScore}>{result.totalScore.toFixed(2)}</span>
-                    <span className={styles.historyInfo}>
-                      <strong>{result.template.name} v{result.template.version}</strong>
-                      <small>{dateTimeFormatter.format(new Date(result.scoredAt))}</small>
-                      {result.isOverridden && <small>Đã điều chỉnh</small>}
-                    </span>
+                    {compareMode ? "Hủy so sánh" : "So sánh"}
                   </button>
-                ))}
+                )}
+              </div>
+              {compareMode && (
+                <p className={styles.compareHint}>
+                  Chọn 2 lần chấm để so sánh ({compareIds.length}/2)
+                </p>
+              )}
+              <div className={styles.historyList}>
+                {results.map((result) => {
+                  const isActive = compareMode
+                    ? compareIds.includes(result.id)
+                    : selectedResult?.id === result.id;
+                  return (
+                    <button
+                      key={result.id}
+                      type="button"
+                      className={`${styles.historyItem} ${
+                        isActive ? styles.historyItemActive : ""
+                      }`}
+                      onClick={() => handleHistoryClick(result.id)}
+                      aria-pressed={compareMode ? isActive : undefined}
+                    >
+                      <span className={styles.historyScore}>{result.totalScore.toFixed(2)}</span>
+                      <span className={styles.historyInfo}>
+                        <strong>{result.template.name} v{result.template.version}</strong>
+                        <small>{dateTimeFormatter.format(new Date(result.scoredAt))}</small>
+                        {result.isOverridden && <small>Đã điều chỉnh</small>}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {selectedResult && (
-              <ScoreDetailPanel
-                result={selectedResult}
-                canOverride={canOverride}
-                onOverride={() => {
-                  overrideMutation.reset();
-                  setOverrideTarget(selectedResult);
-                }}
-              />
+            {compareMode ? (
+              comparison ? (
+                <ScoreComparisonPanel comparison={comparison} />
+              ) : (
+                <div className={styles.detailPanel}>
+                  <div className={styles.comparePlaceholder}>
+                    Chọn 2 lần chấm ở danh sách bên trái để xem chênh lệch.
+                  </div>
+                </div>
+              )
+            ) : (
+              selectedResult && (
+                <ScoreDetailPanel
+                  result={selectedResult}
+                  canOverride={canOverride}
+                  onOverride={() => {
+                    overrideMutation.reset();
+                    setOverrideTarget(selectedResult);
+                  }}
+                />
+              )
             )}
           </div>
         </>
@@ -330,6 +401,96 @@ export function ScoresTab({ companyId, canOverride }: ScoresTabProps) {
         />
       )}
     </section>
+  );
+}
+
+function toComparable(result: ScoreResult): ComparableScoreResult {
+  return {
+    id: result.id,
+    totalScore: result.totalScore,
+    dataCompleteness: result.dataCompleteness,
+    scoredAt: result.scoredAt,
+    details: result.details.map((detail) => ({
+      criteriaId: detail.criteria.id,
+      name: detail.criteria.name,
+      score: detail.score,
+      maxScore: detail.criteria.maxScore,
+    })),
+  };
+}
+
+function formatDelta(value: number, suffix = ""): string {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}${suffix}`;
+}
+
+function deltaClass(value: number | null): string {
+  if (value === null || value === 0) return styles.deltaNeutral;
+  return value > 0 ? styles.deltaUp : styles.deltaDown;
+}
+
+function ScoreComparisonPanel({
+  comparison,
+}: {
+  comparison: ReturnType<typeof compareScoreResults>;
+}) {
+  const { earlier, later, totalScoreDelta, completenessDelta, rows } = comparison;
+
+  return (
+    <div className={styles.detailPanel}>
+      <div className={styles.detailHeader}>
+        <h4 className={styles.panelTitle}>So sánh hai lần chấm</h4>
+      </div>
+
+      <div className={styles.compareSummary}>
+        <div className={styles.compareCol}>
+          <span className={styles.compareColLabel}>Lần trước</span>
+          <strong>{earlier.totalScore.toFixed(2)}</strong>
+          <small>{dateTimeFormatter.format(new Date(earlier.scoredAt))}</small>
+        </div>
+        <div className={styles.compareCol}>
+          <span className={styles.compareColLabel}>Lần sau</span>
+          <strong>{later.totalScore.toFixed(2)}</strong>
+          <small>{dateTimeFormatter.format(new Date(later.scoredAt))}</small>
+        </div>
+        <div className={styles.compareCol}>
+          <span className={styles.compareColLabel}>Chênh lệch</span>
+          <strong className={deltaClass(totalScoreDelta)}>
+            {formatDelta(totalScoreDelta)}
+          </strong>
+          <small className={deltaClass(completenessDelta)}>
+            Hoàn thiện {formatDelta(completenessDelta, "%")}
+          </small>
+        </div>
+      </div>
+
+      <div className={styles.criteriaList}>
+        {rows.map((row) => (
+          <div key={row.criteriaId} className={styles.criteriaDetail}>
+            <div className={styles.criteriaDetailTop}>
+              <span className={styles.criteriaName}>{row.name}</span>
+              {row.presence === "both" ? (
+                <span className={deltaClass(row.delta)}>{formatDelta(row.delta!, "%")}</span>
+              ) : (
+                <span className={styles.missingScore}>
+                  {row.presence === "later-only" ? "Chỉ có lần sau" : "Chỉ có lần trước"}
+                </span>
+              )}
+            </div>
+            <div className={styles.criteriaMeta}>
+              <span>
+                Trước:{" "}
+                {row.earlier ? `${row.earlier.score}/${row.earlier.maxScore}` : "—"}
+              </span>
+              <span>
+                {" · "}Sau:{" "}
+                {row.later ? `${row.later.score}/${row.later.maxScore}` : "—"}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

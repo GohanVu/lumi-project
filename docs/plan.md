@@ -65,7 +65,7 @@
 | T20 | Versioning template — Ban hành, Nhân bản, Ngừng | ✅ Done | T18 | Khóa config khi ban hành |
 | T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ✅ Done | T19, T20 | Dynamic form, server calculation, detail/history, 4 tests |
 | T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ✅ Done | T21 | Giữ điểm hệ thống, Admin-only, audit trước/sau, 5 tests |
-| T23 | Lịch sử chấm điểm — so sánh các lần chấm | ⬜ Todo | T21 | |
+| T23 | Lịch sử chấm điểm — so sánh các lần chấm | ✅ Done | T21 | Chế độ so sánh 2 lần chấm: delta điểm tổng/hoàn thiện + per-criterion chuẩn hóa; helper thuần `scoring/compare.ts` + 5 tests |
 | T24 | Phân loại A/B/C — ngưỡng Admin tự cấu hình | ⬜ Todo | T19 | |
 
 ### Phase 5 (P5) — File & Dashboard
