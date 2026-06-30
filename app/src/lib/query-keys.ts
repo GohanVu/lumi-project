@@ -27,6 +27,7 @@ export const queryKeys = {
   },
   users: {
     all: ["users"] as const,
+    manage: ["users", "manage"] as const,
   },
   dashboard: {
     all: ["dashboard"] as const,
