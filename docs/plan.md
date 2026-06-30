@@ -102,12 +102,27 @@
 | T35 | Refactor component phức tạp cao | ⬜ Todo | P6 | Tách TasksTab (cog 14), TemplateDetailPanel (13), ScoresTab (10) — gom modal/handler ra component con. Maintainability, không phải perf |
 | T36 | Đo & tối ưu thứ graph không thấy | ⬜ Todo | T32 | Bundle size, React re-render thừa, query plan thực tế khi data lớn — cần đo bằng tool runtime, không suy từ static graph |
 
+### Phase 8 (P8) — Mobile responsive (TẠM CHỐT — CẦN BÀN THÊM)
+
+> ⚠️ Định hướng tạm từ brainstorm Session 19, **chưa chốt chi tiết — sẽ bàn lại trước khi làm**.
+> Đảo quyết định "desktop-first, bỏ mobile" của Session 1 (đã đánh dấu trong brainstorm.md).
+> Hướng đã chọn: **Quản lý xem nhanh · Responsive web · Subset đọc + nhập nhẹ**.
+> Form nặng (tạo NPP, cấu hình scoring) giữ desktop, không ép lên mobile.
+
+| Task ID | Mô tả | Status | Dependencies | Notes |
+|---------|--------|--------|--------------|-------|
+| T37 | App shell mobile: nav drawer/bottom-nav, Header gọn, breakpoint chung; cập nhật CSS convention sang "desktop-first có responsive ≤768px" | ⬜ Todo (cần bàn) | — | M1 — nền tảng dùng lại cho mọi màn |
+| T38 | Dashboard responsive — KPI cards & list xếp dọc | ⬜ Todo (cần bàn) | T37 | M1 — màn quan trọng nhất với quản lý |
+| T39 | Danh sách NPP: bảng → card list; filter thành sheet | ⬜ Todo (cần bàn) | T37 | M2 |
+| T40 | Hồ sơ NPP (đọc): tab bar cuộn, grid/compare table stack dọc | ⬜ Todo (cần bàn) | T37 | M2 |
+| T41 | Nhập nhanh trên mobile: modal → bottom sheet, toggle task to hơn, ghi nhanh tương tác | ⬜ Todo (cần bàn) | T40 | M3 — phần "nhập nhẹ" |
+
 ---
 
 ## Critical Path
 
 ```
-P1 (Setup) → P2 (NPP + Contact) → P3 (Tương tác + Task) → P4 (Scoring) → P5 (File + Dashboard) → P6 (Deploy) → P7 (Tối ưu — sau cùng)
+P1 (Setup) → P2 (NPP + Contact) → P3 (Tương tác + Task) → P4 (Scoring) → P5 (File + Dashboard) → P6 (Deploy) → P7 (Tối ưu) → P8 (Mobile — cần bàn thêm)
 ```
 
 ## Ngoài scope MVP (Phase 2 sau)

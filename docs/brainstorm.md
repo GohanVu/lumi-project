@@ -24,7 +24,7 @@ Người dùng có tài liệu đặc tả `Dac_ta_web_CRM_quan_ly_NPP_LUMI.docx
 
 ### Yêu cầu đã xác nhận
 
-- **Platform**: Desktop web (không cần tối ưu mobile)
+- **Platform**: Desktop web (không cần tối ưu mobile) — ⚠️ ĐÃ THAY ĐỔI (Session 19, 2026-06-30): bổ sung mobile responsive, xem Phase 8 trong plan. Vẫn desktop-first, thêm responsive ≤768px cho luồng "quản lý xem nhanh". Chi tiết cần bàn thêm.
 - **Users**: Nội bộ, 1 vài cá nhân (ASM LUMI)
 - **Timeline**: 2 tuần ra MVP
 - **Vibe code**: AI là driver chính → phải tuân thủ steering/rules nghiêm ngặt
@@ -121,7 +121,7 @@ ScoreTemplate ──── ScoreResult (1:n)
 
 ### Quyết định
 
-- Không mobile-first → Desktop web → Đơn giản hóa UI
+- Không mobile-first → Desktop web → Đơn giản hóa UI — ⚠️ cập nhật Session 19: thêm responsive (Phase 8), vẫn desktop-first
 - Vanilla CSS thay vì Tailwind → Kiểm soát tốt hơn, tuân thủ rule
 - File lưu local thay vì S3/MinIO → Đơn giản hơn cho self-host VPS rẻ
 - Better Auth thay vì NextAuth → Nhẹ hơn, hỗ trợ role tốt hơn
