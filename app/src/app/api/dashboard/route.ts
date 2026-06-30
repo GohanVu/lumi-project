@@ -12,6 +12,7 @@ import { CompanyStatus, TaskStatus } from "@/generated/prisma/enums";
  * - overdueTasks (task chưa xong, quá hạn)
  * - todayFollowUps (tương tác có follow-up trong hôm nay)
  * - taskStats (todo/inProgress/done)
+ * - scoreStats (số NPP đã chấm / chưa chấm, điểm trung bình)
  */
 export async function GET() {
   const session = await requireAuth();
@@ -59,6 +60,7 @@ export async function GET() {
     todoCount,
     inProgressCount,
     doneCount,
+    latestScores,
   ] = await Promise.all([
     // Tổng số NPP
     prisma.company.count({ where: companyScope }),
@@ -116,6 +118,14 @@ export async function GET() {
     prisma.task.count({
       where: { ...relatedCompanyScope, status: "DONE" },
     }),
+
+    // Điểm mới nhất của mỗi NPP (distinct theo company, scoredAt giảm dần)
+    prisma.scoreResult.findMany({
+      where: relatedCompanyScope,
+      orderBy: [{ companyId: "asc" }, { scoredAt: "desc" }],
+      distinct: ["companyId"],
+      select: { totalScore: true },
+    }),
   ]);
 
   // Chuẩn hóa companiesByStatus về đủ tất cả status (kể cả 0)
@@ -127,6 +137,17 @@ export async function GET() {
     count: statusCountMap.get(status) ?? 0,
   }));
 
+  // KPI điểm: số NPP đã chấm, chưa chấm và điểm trung bình (theo điểm mới nhất)
+  const scoredCompanies = latestScores.length;
+  const averageScore =
+    scoredCompanies > 0
+      ? Math.round(
+          (latestScores.reduce((sum, s) => sum + s.totalScore, 0) /
+            scoredCompanies) *
+            10
+        ) / 10
+      : null;
+
   return NextResponse.json({
     data: {
       totalCompanies,
@@ -135,6 +156,11 @@ export async function GET() {
         todo: todoCount,
         inProgress: inProgressCount,
         done: doneCount,
+      },
+      scoreStats: {
+        scoredCompanies,
+        unscoredCompanies: Math.max(totalCompanies - scoredCompanies, 0),
+        averageScore,
       },
       overdueTasks,
       todayFollowUps,

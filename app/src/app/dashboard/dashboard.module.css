@@ -43,6 +43,12 @@
   line-height: 1;
 }
 
+.kpiSub {
+  font-size: var(--text-lg);
+  font-weight: var(--font-normal);
+  color: var(--text-secondary);
+}
+
 .kpiValueDanger {
   color: var(--color-danger);
 }

@@ -24,6 +24,11 @@ interface DashboardData {
   totalCompanies: number;
   companiesByStatus: { status: CompanyStatus; count: number }[];
   taskStats: { todo: number; inProgress: number; done: number };
+  scoreStats: {
+    scoredCompanies: number;
+    unscoredCompanies: number;
+    averageScore: number | null;
+  };
   overdueTasks: {
     id: string;
     title: string;
@@ -154,6 +159,22 @@ export default function DashboardPage() {
               <div className={styles.kpiLabel}>Task đang thực hiện</div>
               <div className={styles.kpiValue}>
                 {stats.taskStats.todo + stats.taskStats.inProgress}
+              </div>
+            </div>
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiLabel}>Điểm TB NPP</div>
+              <div className={styles.kpiValue}>
+                {stats.scoreStats.averageScore ?? "—"}
+              </div>
+            </div>
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiLabel}>NPP đã chấm điểm</div>
+              <div className={styles.kpiValue}>
+                {stats.scoreStats.scoredCompanies}
+                <span className={styles.kpiSub}>
+                  {" "}
+                  / {stats.totalCompanies}
+                </span>
               </div>
             </div>
           </div>

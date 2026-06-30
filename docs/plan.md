@@ -76,7 +76,7 @@
 |---------|--------|--------|--------------|-------|
 | T25 | Upload file đính kèm per NPP (ảnh, PDF, doc) | ⬜ Todo | P2 | Lưu local /uploads, Nginx serve |
 | T26 | Tab Tệp — xem, tải, xóa file | ⬜ Todo | T25 | |
-| T27 | Dashboard chính — KPI: tổng NPP, theo trạng thái, score | 🔄 In Progress | P3, P4 | Đã có total NPP + theo trạng thái + taskStats (trong T17), phân theo role. Còn thiếu KPI theo score |
+| T27 | Dashboard chính — KPI: tổng NPP, theo trạng thái, score | ✅ Done | P3, P4 | total NPP + theo trạng thái + taskStats + KPI điểm (điểm TB, số NPP đã chấm), phân theo role. Grade A/B/C chờ T24 |
 | T28 | Admin: quản lý User (tạo, phân quyền, vô hiệu hóa) | ⬜ Todo | P1 | |
 
 ### Phase 6 (P6) — Polish & Deploy
