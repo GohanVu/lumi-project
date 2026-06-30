@@ -8,17 +8,17 @@ File này định hướng AI hiểu các quy ước riêng của project. Khi i
 ## Nguyên tắc chung
 
 1. **Reuse trước, tạo mới sau**: Trước khi tạo bất kỳ service/utility/pattern nào mới, PHẢI kiểm tra xem project đã có pattern tương tự chưa. Nếu có → reuse.
-2. **Đọc context trước khi code**: Luôn đọc audit log, plan, brainstorm, issues trước khi bắt đầu implement.
+2. **Đọc context trước khi code**: Luôn đọc plan, brainstorm, issues và audit log gần nhất trước khi bắt đầu implement.
 3. **Ghi lại quyết định**: Mọi quyết định kỹ thuật quan trọng phải được ghi vào audit log.
-4. **BẮT BUỘC đọc đủ 4 file mỗi session**: audit-log.md, plan.md, brainstorm.md, issues.md — kể cả khi summary có vẻ đủ.
+4. **BẮT BUỘC đọc mỗi session**: plan.md, brainstorm.md, issues.md (đọc đủ), và audit-log.md (chỉ phần session gần nhất còn trong file — KHÔNG cần đọc archive trừ khi cần truy nguyên quyết định cũ).
 
 ## Tham chiếu bắt buộc
 
 Khi bắt đầu một session mới hoặc implement task mới, AI PHẢI đọc:
-- `docs/audit-log.md` — Lịch sử làm việc với AI
-- `docs/plan.md` — Plan, roadmap, phases, tasks
+- `docs/plan.md` — Plan, roadmap, phases, tasks (**nguồn chân lý trạng thái** cùng với git + source + quality gates)
 - `docs/brainstorm.md` — Kết quả brainstorm ban đầu
 - `docs/issues.md` — Bugs đã phát hiện
+- `docs/audit-log.md` — Log tham khảo các session gần nhất (rolling window; session cũ ở `docs/audit-archive/`). KHÔNG dùng làm bằng chứng trạng thái.
 - `.kiro/steering/` — Tất cả steering files
 
 ## Tech Stack

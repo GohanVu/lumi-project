@@ -22,7 +22,7 @@ KHÔNG code ngay khi nhận yêu cầu. Tuân theo workflow:
 
 - docs/brainstorm.md — Lịch sử brainstorm, lý do thiết kế
 - docs/plan.md — Plan hiện tại, phases, tasks, status
-- docs/audit-log.md — Nhật ký làm việc, quyết định đã có
+- docs/audit-log.md — Log tham khảo các session gần nhất (rolling window; session cũ ở docs/audit-archive/). Không dùng làm bằng chứng trạng thái — nguồn chân lý là plan + git + source + quality gates.
 - docs/issues.md — Bugs đã phát hiện, lessons learned
 - .kiro/steering/project-conventions.md — Quy ước kỹ thuật (DB, API, testing...)
 
@@ -48,6 +48,8 @@ Sau mỗi session, ghi vào docs/audit-log.md:
 ### Tasks liên quan
 - Task IDs từ plan
 ```
+
+Khi audit-log.md vượt ~6 session, chuyển các session cũ nhất sang file archive của quý hiện tại trong docs/audit-archive/ (vd: 2026-Q2.md) để giữ file chính gọn.
 
 ## Plan Format
 

@@ -37,7 +37,7 @@ Sau brainstorm, tạo plan tại `docs/plan.md` bao gồm:
 
 Khi implement từng task:
 1. Đọc steering + plan + audit log
-2. Đối chiếu trạng thái thực tế giữa `docs/plan.md`, `docs/audit-log.md`, `git status`/`git diff`, source code và kết quả quality gates. Nếu lệch, PHẢI báo rõ và lấy source + quality gates làm bằng chứng; không tự suy diễn theo riêng plan hoặc audit log.
+2. Đối chiếu trạng thái thực tế giữa `docs/plan.md`, `git status`/`git diff`, source code và kết quả quality gates — đây là nguồn chân lý. `docs/audit-log.md` chỉ là log tham khảo, KHÔNG dùng làm bằng chứng trạng thái. Nếu lệch, PHẢI báo rõ và lấy source + quality gates làm bằng chứng; không tự suy diễn theo riêng plan hoặc audit log.
 3. Xác nhận task cần làm và đổi task sang `🔄 In Progress` TRƯỚC khi sửa code
 4. Implement
 5. Nếu có mutation, chạy `Cache Consistency Gate`: map dữ liệu thay đổi → query keys bị ảnh hưởng → cách update/invalidate → regression/E2E test
