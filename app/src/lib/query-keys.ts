@@ -20,6 +20,7 @@ export const queryKeys = {
     interactions: (companyId: string) => ["interactions", companyId] as const,
     tasks: (companyId: string) => ["tasks", companyId] as const,
     scores: (companyId: string) => ["scores", companyId] as const,
+    attachments: (companyId: string) => ["attachments", companyId] as const,
   },
   scoreTemplates: {
     all: scoreTemplatesKey,

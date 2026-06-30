@@ -10,6 +10,7 @@ import { ContactsTab } from "@/components/companies/ContactsTab";
 import { TimelineTab } from "@/components/companies/TimelineTab";
 import { TasksTab } from "@/components/companies/TasksTab";
 import { ScoresTab } from "@/components/companies/ScoresTab";
+import { FilesTab } from "@/components/companies/FilesTab";
 import { queryKeys } from "@/lib/query-keys";
 import styles from "./company-detail.module.css";
 
@@ -172,7 +173,7 @@ export default function CompanyDetailPage() {
           <ScoresTab companyId={company.id} canOverride={user?.role === "ADMIN"} />
         )}
         {activeTab === "files" && (
-          <PlaceholderTab icon="📎" label="Tab Tệp sẽ được implement ở T26" />
+          <FilesTab companyId={company.id} />
         )}
         {activeTab === "logs" && (
           <PlaceholderTab icon="🕐" label="Tab Lịch sử sẽ được implement ở T30" />
