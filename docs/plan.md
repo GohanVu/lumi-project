@@ -52,7 +52,7 @@
 | T14 | Tab Timeline — log tương tác theo thời gian | ✅ Done | P2 | GET API + timeline UI, nhóm ngày theo giờ VN |
 | T15 | Form thêm tương tác — chọn loại, ghi nội dung, kết quả | ✅ Done | T14 | POST API, form, follow-up ISO, 4 tests |
 | T16 | Tab Nhiệm vụ — CRUD task, deadline, trạng thái | ✅ Done | T14 | |
-| T17 | Dashboard — task quá hạn, follow-up hôm nay | ✅ Done | T16 | |
+| T17 | Dashboard — task quá hạn, follow-up hôm nay | ✅ Done | T16 | API /api/dashboard + DashboardPage; chồng lấn phần dashboard với T27 |
 
 ### Phase 4 (P4) — Chấm điểm NPP (Full Spec)
 
@@ -76,7 +76,7 @@
 |---------|--------|--------|--------------|-------|
 | T25 | Upload file đính kèm per NPP (ảnh, PDF, doc) | ⬜ Todo | P2 | Lưu local /uploads, Nginx serve |
 | T26 | Tab Tệp — xem, tải, xóa file | ⬜ Todo | T25 | |
-| T27 | Dashboard chính — KPI: tổng NPP, theo trạng thái, score | ⬜ Todo | P3, P4 | Phân theo role |
+| T27 | Dashboard chính — KPI: tổng NPP, theo trạng thái, score | 🔄 In Progress | P3, P4 | Đã có total NPP + theo trạng thái + taskStats (trong T17), phân theo role. Còn thiếu KPI theo score |
 | T28 | Admin: quản lý User (tạo, phân quyền, vô hiệu hóa) | ⬜ Todo | P1 | |
 
 ### Phase 6 (P6) — Polish & Deploy
@@ -90,6 +90,12 @@
 | T31 | Build production Docker image | ⬜ Todo | T29 | |
 | T32 | Deploy lên VPS LANIT, cấu hình Nginx + HTTPS | ⬜ Todo | T31 | |
 | T33 | Test end-to-end với user thật | ⬜ Todo | T32 | |
+
+### Maintenance & Reviews
+
+| Task ID | Mô tả | Status | Dependencies | Notes |
+|---------|--------|--------|--------------|-------|
+| DR1 | Rà soát sai lệch giữa tài liệu Markdown và source code | ✅ Done | — | MCP Codebase Memory (2026-06-30): plan khớp source; chỉ T27 lệch (đã làm phần lớn) → cập nhật In Progress; T23/T24/T25/T26/T28/T30 xác nhận đúng Todo |
 
 ---
 
