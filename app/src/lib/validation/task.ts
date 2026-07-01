@@ -45,7 +45,18 @@ export const updateTaskSchema = z
     message: "Cần ít nhất một trường để cập nhật",
   });
 
+export const taskListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().default(50),
+  search: z.string().trim().optional(),
+  status: taskStatusSchema.optional(),
+  priority: taskPrioritySchema.optional(),
+  companyId: z.string().optional(),
+  assignedToId: z.string().optional(),
+});
+
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export type TaskPriority = z.infer<typeof taskPrioritySchema>;
 export type TaskFormInput = z.input<typeof taskFormSchema>;
 export type TaskFormData = z.output<typeof taskFormSchema>;
+export type TaskListQueryData = z.infer<typeof taskListQuerySchema>;

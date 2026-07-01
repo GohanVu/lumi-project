@@ -4,9 +4,20 @@ export interface CompanyListFilters {
   status: string;
 }
 
+export interface TaskListFilters {
+  page: number;
+  limit: number;
+  search: string;
+  status: string;
+  priority: string;
+  companyId: string;
+  assignedToId: string;
+}
+
 const companyListsKey = ["companies"] as const;
 const scoreTemplatesKey = ["score-templates"] as const;
 const scoreResultsKey = ["scores"] as const;
+const tasksKey = ["tasks"] as const;
 
 /**
  * Nguồn duy nhất cho TanStack Query keys.
@@ -23,6 +34,10 @@ export const queryKeys = {
     scores: (companyId: string) => [...scoreResultsKey, companyId] as const,
     attachments: (companyId: string) => ["attachments", companyId] as const,
     auditLogs: (companyId: string) => ["audit-logs", companyId] as const,
+  },
+  tasks: {
+    all: tasksKey,
+    list: (filters: TaskListFilters) => [...tasksKey, filters] as const,
   },
   scoreTemplates: {
     all: scoreTemplatesKey,
