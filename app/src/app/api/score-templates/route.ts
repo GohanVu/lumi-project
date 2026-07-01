@@ -29,6 +29,8 @@ export async function GET() {
       description: true,
       version: true,
       status: true,
+      gradeAMin: true,
+      gradeBMin: true,
       createdAt: true,
       updatedAt: true,
       _count: {
@@ -84,6 +86,8 @@ export async function POST(request: NextRequest) {
     data: {
       name: result.data.name,
       description: result.data.description ?? null,
+      gradeAMin: result.data.gradeAMin,
+      gradeBMin: result.data.gradeBMin,
       createdById: user.id,
     },
     select: {
@@ -92,6 +96,8 @@ export async function POST(request: NextRequest) {
       description: true,
       version: true,
       status: true,
+      gradeAMin: true,
+      gradeBMin: true,
       createdAt: true,
       updatedAt: true,
       _count: { select: { criteria: true, results: true } },

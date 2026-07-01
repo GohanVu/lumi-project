@@ -243,6 +243,8 @@ model ScoreTemplate {
   description String?
   version     Int            @default(1)
   status      TemplateStatus @default(DRAFT)
+  gradeAMin   Float          @default(80) @map("grade_a_min")
+  gradeBMin   Float          @default(60) @map("grade_b_min")
   createdById String         @map("created_by_id")
   updatedBy   String?        @map("updated_by")
   createdAt   DateTime       @default(now()) @map("created_at")

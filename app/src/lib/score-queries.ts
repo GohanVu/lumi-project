@@ -11,3 +11,15 @@ export async function invalidateScoreOverride(
     queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all }),
   ]);
 }
+
+/** Đồng bộ cấu hình Admin và mọi tab NPP có danh sách mẫu khả dụng. */
+export async function invalidateScoreTemplateAvailability(
+  queryClient: QueryClient,
+  templateId: string
+) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.scoreResults.all }),
+  ]);
+}

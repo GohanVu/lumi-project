@@ -16,15 +16,19 @@ export const createContactSchema = contactFormSchema.extend({
   isPrimary: z.boolean().default(false),
 });
 
-export const updateContactSchema = z.object({
-  fullName: z.string().trim().min(1).max(255).optional(),
-  position: z.string().trim().max(100).optional().nullable(),
-  phone: z.string().trim().max(20).optional().nullable(),
-  email: z.string().trim().email().optional().nullable().or(z.literal("")),
-  isPrimary: z.boolean().optional(),
-  influence: contactInfluenceSchema.optional().nullable().or(z.literal("")),
-  notes: z.string().trim().max(1000).optional().nullable(),
-});
+export const updateContactSchema = z
+  .object({
+    fullName: z.string().trim().min(1).max(255).optional(),
+    position: z.string().trim().max(100).optional().nullable(),
+    phone: z.string().trim().max(20).optional().nullable(),
+    email: z.string().trim().email().optional().nullable().or(z.literal("")),
+    isPrimary: z.boolean().optional(),
+    influence: contactInfluenceSchema.optional().nullable().or(z.literal("")),
+    notes: z.string().trim().max(1000).optional().nullable(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: "Cần ít nhất một trường để cập nhật",
+  });
 
 export type ContactInfluence = z.infer<typeof contactInfluenceSchema>;
 export type ContactFormInput = z.input<typeof contactFormSchema>;

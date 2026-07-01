@@ -88,13 +88,21 @@ export async function PUT(
     }
   }
 
-  const updated = await prisma.user.update({
-    where: { id },
-    data: {
-      ...(role !== undefined ? { role } : {}),
-      ...(isActive !== undefined ? { isActive } : {}),
-    },
-    select: manageSelect,
+  const updated = await prisma.$transaction(async (transaction) => {
+    const user = await transaction.user.update({
+      where: { id },
+      data: {
+        ...(role !== undefined ? { role } : {}),
+        ...(isActive !== undefined ? { isActive } : {}),
+      },
+      select: manageSelect,
+    });
+
+    if (isActive === false) {
+      await transaction.session.deleteMany({ where: { userId: id } });
+    }
+
+    return user;
   });
 
   return NextResponse.json({ data: updated });

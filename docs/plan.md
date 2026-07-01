@@ -1,4 +1,4 @@
-﻿# Project Plan & Roadmap
+# Project Plan & Roadmap
 
 > CRM Quản lý NPP LUMI — Web nội bộ cho ASM LUMI
 > AI PHẢI đọc file này trước khi implement bất kỳ task nào.
@@ -66,7 +66,7 @@
 | T21 | Tab Chấm điểm — chấm thủ công, tự động, xem chi tiết | ✅ Done | T19, T20 | Dynamic form, server calculation, detail/history, 4 tests |
 | T22 | Ghi đè điểm — audit log, bắt buộc nhập lý do | ✅ Done | T21 | Giữ điểm hệ thống, Admin-only, audit trước/sau, 5 tests |
 | T23 | Lịch sử chấm điểm — so sánh các lần chấm | ✅ Done | T21 | Chế độ so sánh 2 lần chấm: delta điểm tổng/hoàn thiện + per-criterion chuẩn hóa; helper thuần `scoring/compare.ts` + 5 tests |
-| T24 | Phân loại A/B/C — ngưỡng Admin tự cấu hình | ⬜ Todo | T19 | |
+| T24 | Phân loại A/B/C — ngưỡng Admin tự cấu hình | ✅ Done | T19 | Ngưỡng versioned theo ScoreTemplate; A ≥ 80, B ≥ 60 mặc định; tự tính lại khi override |
 
 ### Phase 5 (P5) — File & Dashboard
 
@@ -85,8 +85,8 @@
 
 | Task ID | Mô tả | Status | Dependencies | Notes |
 |---------|--------|--------|--------------|-------|
-| T29 | Xử lý edge cases, validation đầy đủ | ⬜ Todo | P5 | |
-| T30 | Audit log Tab Lịch sử per NPP | ⬜ Todo | P5 | |
+| T29 | Xử lý edge cases, validation đầy đủ | ✅ Done | P5 | Audit auth/RBAC, mutation validation và lỗi cạnh tranh dữ liệu |
+| T30 | Audit log Tab Lịch sử per NPP | ✅ Done | P5 | |
 | T31 | Build production Docker image | ⬜ Todo | T29 | |
 | T32 | Deploy lên VPS LANIT, cấu hình Nginx + HTTPS | ⬜ Todo | T31 | |
 | T33 | Test end-to-end với user thật | ⬜ Todo | T32 | |

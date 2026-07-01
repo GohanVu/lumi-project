@@ -8,9 +8,41 @@ import {
 } from "./score-template";
 
 test("template form rejects empty name", () => {
-  const result = templateFormSchema.safeParse({ name: "   ", description: "" });
+  const result = templateFormSchema.safeParse({
+    name: "   ",
+    description: "",
+    gradeAMin: "80",
+    gradeBMin: "60",
+  });
   assert.equal(result.success, false);
   assert.ok(result.error?.errors[0]?.message?.includes("Tên mẫu"));
+});
+
+test("template form accepts numeric threshold inputs and enforces their order", () => {
+  const valid = templateFormSchema.safeParse({
+    name: "Mẫu 2026",
+    description: "",
+    gradeAMin: "85",
+    gradeBMin: "65",
+  });
+  const invalidOrder = templateFormSchema.safeParse({
+    name: "Mẫu 2026",
+    description: "",
+    gradeAMin: "60",
+    gradeBMin: "80",
+  });
+
+  assert.equal(valid.success, true);
+  if (valid.success) {
+    assert.equal(valid.data.gradeAMin, 85);
+    assert.equal(valid.data.gradeBMin, 65);
+  }
+  assert.equal(invalidOrder.success, false);
+});
+
+test("template update rejects thresholds outside 0-100", () => {
+  assert.equal(updateTemplateSchema.safeParse({ gradeAMin: 101 }).success, false);
+  assert.equal(updateTemplateSchema.safeParse({ gradeBMin: -1 }).success, false);
 });
 
 test("criteria API rejects non-positive maxScore and weight", () => {

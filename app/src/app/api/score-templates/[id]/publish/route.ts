@@ -59,9 +59,30 @@ export async function POST(
   }
 
   const user = session.user as { id: string };
-  const updated = await prisma.scoreTemplate.update({
-    where: { id },
+  const updatedResult = await prisma.scoreTemplate.updateMany({
+    where: { id, status: "DRAFT" },
     data: { status: "PUBLISHED", updatedBy: user.id },
+  });
+
+  if (updatedResult.count === 0) {
+    const temp = await prisma.scoreTemplate.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!temp) {
+      return NextResponse.json(
+        { error: "Không tìm thấy mẫu chấm điểm", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Chỉ ban hành được mẫu ở trạng thái Nháp.", code: "INVALID_STATE" },
+      { status: 409 }
+    );
+  }
+
+  const updated = await prisma.scoreTemplate.findUnique({
+    where: { id },
     select: {
       id: true,
       name: true,

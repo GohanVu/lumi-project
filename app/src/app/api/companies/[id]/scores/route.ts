@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/db";
 import { calculateScore } from "@/lib/scoring/calculate";
+import { determineGrade } from "@/lib/scoring/grade";
 import { createScoreResultSchema } from "@/lib/validation/score-result";
 
 async function findAccessibleCompany(id: string, userId: string, role: string) {
@@ -67,6 +68,8 @@ export async function GET(
             id: true,
             name: true,
             version: true,
+            gradeAMin: true,
+            gradeBMin: true,
             criteria: {
               orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
               select: criteriaSelect,
@@ -91,6 +94,8 @@ export async function GET(
         name: true,
         description: true,
         version: true,
+        gradeAMin: true,
+        gradeBMin: true,
         criteria: {
           orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           select: criteriaSelect,
@@ -111,6 +116,12 @@ export async function GET(
     return {
       ...result,
       systemScore: result.systemScore ?? result.totalScore,
+      grade:
+        result.grade ??
+        determineGrade(result.totalScore, {
+          gradeAMin: result.template.gradeAMin,
+          gradeBMin: result.template.gradeBMin,
+        }),
       dataCompleteness: calculation.dataCompleteness,
     };
   });
@@ -173,6 +184,8 @@ export async function POST(
       id: true,
       name: true,
       version: true,
+      gradeAMin: true,
+      gradeBMin: true,
       criteria: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         select: criteriaSelect,
@@ -229,6 +242,11 @@ export async function POST(
     );
   }
 
+  const grade = determineGrade(calculation.totalScore, {
+    gradeAMin: template.gradeAMin,
+    gradeBMin: template.gradeBMin,
+  });
+
   const created = await prisma.$transaction(async (transaction) => {
     const scoreResult = await transaction.scoreResult.create({
       data: {
@@ -236,6 +254,7 @@ export async function POST(
         templateId: template.id,
         systemScore: calculation.totalScore,
         totalScore: calculation.totalScore,
+        grade,
         scoredById: user.id,
         details: {
           create: calculation.details
@@ -268,6 +287,7 @@ export async function POST(
           templateVersion: template.version,
           missingDataPolicy: parsed.data.missingDataPolicy,
           totalScore: calculation.totalScore,
+          grade,
           dataCompleteness: calculation.dataCompleteness,
         }),
       },

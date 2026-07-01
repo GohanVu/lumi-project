@@ -28,6 +28,7 @@ interface DashboardData {
     scoredCompanies: number;
     unscoredCompanies: number;
     averageScore: number | null;
+    gradeCounts: { A: number; B: number; C: number };
   };
   overdueTasks: {
     id: string;
@@ -189,6 +190,18 @@ export default function DashboardPage() {
                     {STATUS_LABEL[item.status]}
                   </span>
                   <span className={styles.statusCount}>{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.statusSection}>
+            <h2 className={styles.sectionTitle}>NPP theo xếp hạng gần nhất</h2>
+            <div className={styles.statusGrid}>
+              {(["A", "B", "C"] as const).map((grade) => (
+                <div key={grade} className={styles.statusItem}>
+                  <span className={styles.statusLabel}>Hạng {grade}</span>
+                  <span className={styles.statusCount}>{stats.scoreStats.gradeCounts[grade]}</span>
                 </div>
               ))}
             </div>

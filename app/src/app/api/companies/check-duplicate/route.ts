@@ -22,9 +22,12 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
+  const rawPhone = searchParams.get("phone")?.trim();
+  const rawTaxCode = searchParams.get("taxCode")?.trim();
+
   const parseResult = querySchema.safeParse({
-    phone: searchParams.get("phone") || undefined,
-    taxCode: searchParams.get("taxCode") || undefined,
+    phone: rawPhone || undefined,
+    taxCode: rawTaxCode || undefined,
   });
 
   if (!parseResult.success) {

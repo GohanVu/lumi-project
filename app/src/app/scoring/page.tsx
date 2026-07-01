@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
 import { queryKeys } from "@/lib/query-keys";
+import { invalidateScoreTemplateAvailability } from "@/lib/score-queries";
 import {
   templateFormSchema,
   criteriaFormSchema,
@@ -25,6 +26,8 @@ interface TemplateListItem {
   description: string | null;
   version: number;
   status: TemplateStatus;
+  gradeAMin: number;
+  gradeBMin: number;
   createdAt: string;
   updatedAt: string;
   _count: { criteria: number; results: number };
@@ -45,6 +48,8 @@ interface TemplateDetail {
   description: string | null;
   version: number;
   status: TemplateStatus;
+  gradeAMin: number;
+  gradeBMin: number;
   createdAt: string;
   updatedAt: string;
   _count: { results: number };
@@ -106,7 +111,6 @@ function ScoringAdmin() {
   });
 
   const templates = listData?.data ?? [];
-  // Mẫu đang chọn: fallback về mẫu đầu tiên nếu chưa chọn (giá trị dẫn xuất, không dùng effect)
   const effectiveId = selectedId ?? templates[0]?.id ?? null;
 
   const createTemplateMutation = useMutation({
@@ -117,6 +121,8 @@ function ScoringAdmin() {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description || null,
+          gradeAMin: formData.gradeAMin,
+          gradeBMin: formData.gradeBMin,
         }),
       });
       if (!res.ok) {
@@ -140,6 +146,8 @@ function ScoringAdmin() {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description || null,
+          gradeAMin: formData.gradeAMin,
+          gradeBMin: formData.gradeBMin,
         }),
       });
       if (!res.ok) {
@@ -217,7 +225,6 @@ function ScoringAdmin() {
 
       {!listLoading && !listError && (
         <div className={styles.layout}>
-          {/* Template list */}
           <div className={styles.templateList}>
             {templates.length === 0 ? (
               <div className={styles.empty}>Chưa có mẫu chấm điểm nào.</div>
@@ -248,7 +255,6 @@ function ScoringAdmin() {
             )}
           </div>
 
-          {/* Detail */}
           {effectiveId ? (
             <TemplateDetailPanel
               templateId={effectiveId}
@@ -267,7 +273,6 @@ function ScoringAdmin() {
         </div>
       )}
 
-      {/* Template create/edit modal */}
       {showTemplateForm && (
         <TemplateForm
           key={editingTemplate?.id ?? "new"}
@@ -296,8 +301,6 @@ function ScoringAdmin() {
     </>
   );
 }
-
-// ─── Detail panel ───────────────────────────────────────────────────────────
 
 interface DetailPanelProps {
   templateId: string;
@@ -421,7 +424,6 @@ function TemplateDetailPanel({
     }
   };
 
-  // Versioning: ban hành / lưu trữ / nhân bản
   const transitionMutation = useMutation({
     mutationFn: async (action: "publish" | "archive") => {
       const res = await fetch(`/api/score-templates/${templateId}/${action}`, {
@@ -433,9 +435,8 @@ function TemplateDetailPanel({
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.detail(templateId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.scoreTemplates.all });
+    onSuccess: async () => {
+      await invalidateScoreTemplateAvailability(queryClient, templateId);
     },
   });
 
@@ -521,6 +522,7 @@ function TemplateDetailPanel({
                   className={styles.primaryButton}
                   onClick={handlePublish}
                   disabled={transitionMutation.isPending || template.criteria.length === 0}
+                  title={template.criteria.length === 0 ? "Mẫu chấm điểm cần ít nhất 1 tiêu chí mới được ban hành" : undefined}
                 >
                   Ban hành
                 </button>
@@ -556,6 +558,16 @@ function TemplateDetailPanel({
         </div>
         {transitionError && (
           <div className={styles.submitError} role="alert">{transitionError}</div>
+        )}
+        <div className={styles.gradeThresholds}>
+          <span><strong>A</strong> từ {template.gradeAMin} điểm</span>
+          <span><strong>B</strong> từ {template.gradeBMin} đến dưới {template.gradeAMin}</span>
+          <span><strong>C</strong> dưới {template.gradeBMin} điểm</span>
+        </div>
+        {isDraft && template.criteria.length === 0 && (
+          <div className={styles.lockNotice} style={{ backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)" }}>
+            ⚠️ Mẫu chưa có tiêu chí. Bạn cần thêm ít nhất 1 tiêu chí ở mục bên dưới để có thể ban hành mẫu này.
+          </div>
         )}
         {!isDraft && (
           <div className={styles.lockNotice}>
@@ -655,8 +667,6 @@ function TemplateDetailPanel({
   );
 }
 
-// ─── Template form modal ────────────────────────────────────────────────────
-
 interface TemplateFormProps {
   initialData: TemplateDetail | null;
   isPending: boolean;
@@ -675,6 +685,8 @@ function TemplateForm({ initialData, isPending, submitError, onClose, onSubmit }
     defaultValues: {
       name: initialData?.name ?? "",
       description: initialData?.description ?? "",
+      gradeAMin: initialData?.gradeAMin ?? 80,
+      gradeBMin: initialData?.gradeBMin ?? 60,
     },
   });
 
@@ -713,6 +725,39 @@ function TemplateForm({ initialData, isPending, submitError, onClose, onSubmit }
                 {...register("description")}
               />
             </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label htmlFor="tpl-grade-a" className={styles.label}>
+                  Hạng A từ<span className={styles.required}>*</span>
+                </label>
+                <input
+                  id="tpl-grade-a"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className={`${styles.input} ${errors.gradeAMin ? styles.inputError : ""}`}
+                  {...register("gradeAMin")}
+                />
+                {errors.gradeAMin && <span className={styles.fieldError}>{errors.gradeAMin.message}</span>}
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="tpl-grade-b" className={styles.label}>
+                  Hạng B từ<span className={styles.required}>*</span>
+                </label>
+                <input
+                  id="tpl-grade-b"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className={`${styles.input} ${errors.gradeBMin ? styles.inputError : ""}`}
+                  {...register("gradeBMin")}
+                />
+                {errors.gradeBMin && <span className={styles.fieldError}>{errors.gradeBMin.message}</span>}
+              </div>
+            </div>
+            <p className={styles.hint}>Hạng C áp dụng cho điểm thấp hơn ngưỡng B.</p>
             {submitError && <div className={styles.submitError} role="alert">{submitError}</div>}
           </div>
           <div className={styles.modalFooter}>
@@ -728,8 +773,6 @@ function TemplateForm({ initialData, isPending, submitError, onClose, onSubmit }
     </div>
   );
 }
-
-// ─── Criteria form modal ────────────────────────────────────────────────────
 
 interface CriteriaFormProps {
   initialData: Criteria | null;

@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { signIn, useSession } from "@/lib/auth-client";
+import { signIn, signOut, useSession } from "@/lib/auth-client";
 import styles from "./login.module.css";
 
 const loginSchema = z.object({
@@ -43,6 +43,12 @@ export default function LoginPage() {
 
       if (result.error) {
         throw new Error(result.error.message || "Email hoặc mật khẩu không đúng");
+      }
+
+      const signedInUser = result.data?.user as { isActive?: boolean } | undefined;
+      if (signedInUser?.isActive === false) {
+        await signOut();
+        throw new Error("Tài khoản đã bị vô hiệu hóa");
       }
 
       return result.data;

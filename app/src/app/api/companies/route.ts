@@ -2,18 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-guard";
 import { resolveCompanyAssigneeId } from "@/lib/company-assignment";
-import { z } from "zod";
-import { CompanyStatus } from "@/generated/prisma/enums";
-
-// Query params validation
-const listQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().optional(),
-  status: z.string().optional(),
-  sortBy: z.enum(["name", "createdAt", "status", "updatedAt"]).default("createdAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+import {
+  companyListQuerySchema,
+  createCompanySchema,
+} from "@/lib/validation/company";
+import { hasPrismaErrorCode } from "@/lib/prisma-errors";
 
 export async function GET(request: NextRequest) {
   // Auth check
@@ -27,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   // Parse query params
   const { searchParams } = new URL(request.url);
-  const parseResult = listQuerySchema.safeParse({
+  const parseResult = companyListQuerySchema.safeParse({
     page: searchParams.get("page") || 1,
     limit: searchParams.get("limit") || 20,
     search: searchParams.get("search") || undefined,
@@ -116,22 +109,6 @@ export async function GET(request: NextRequest) {
     },
   });
 }
-
-// Create company schema
-const createCompanySchema = z.object({
-  name: z.string().min(1, "Tên NPP không được để trống").max(255),
-  taxCode: z.string().max(20).optional().nullable(),
-  phone: z.string().max(20).optional().nullable(),
-  email: z.string().email("Email không hợp lệ").optional().nullable().or(z.literal("")),
-  address: z.string().max(500).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
-  district: z.string().max(100).optional().nullable(),
-  ward: z.string().max(100).optional().nullable(),
-  status: z.nativeEnum(CompanyStatus).default("PROSPECT"),
-  source: z.string().max(255).optional().nullable(),
-  notes: z.string().max(2000).optional().nullable(),
-  assignedToId: z.string().optional().nullable(),
-});
 
 export async function POST(request: NextRequest) {
   // Auth check
@@ -230,23 +207,34 @@ export async function POST(request: NextRequest) {
   }
 
   // Create company
-  const company = await prisma.company.create({
-    data: {
-      name: data.name,
-      taxCode: data.taxCode || null,
-      phone: data.phone || null,
-      email: data.email || null,
-      address: data.address || null,
-      province: data.province || null,
-      district: data.district || null,
-      ward: data.ward || null,
-      status: data.status,
-      source: data.source || null,
-      notes: data.notes || null,
-      assignedToId,
-      createdById: user.id,
-    },
-  });
+  let company;
+  try {
+    company = await prisma.company.create({
+      data: {
+        name: data.name,
+        taxCode: data.taxCode || null,
+        phone: data.phone || null,
+        email: data.email || null,
+        address: data.address || null,
+        province: data.province || null,
+        district: data.district || null,
+        ward: data.ward || null,
+        status: data.status,
+        source: data.source || null,
+        notes: data.notes || null,
+        assignedToId,
+        createdById: user.id,
+      },
+    });
+  } catch (error) {
+    if (hasPrismaErrorCode(error, "P2002")) {
+      return NextResponse.json(
+        { error: "Mã số thuế đã được sử dụng", code: "DUPLICATE_TAX_CODE" },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 
   return NextResponse.json({ data: company }, { status: 201 });
 }

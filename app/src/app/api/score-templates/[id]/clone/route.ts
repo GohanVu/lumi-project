@@ -33,6 +33,8 @@ export async function POST(
       name: true,
       description: true,
       version: true,
+      gradeAMin: true,
+      gradeBMin: true,
       criteria: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         select: {
@@ -69,6 +71,8 @@ export async function POST(
       description: source.description,
       version: nextVersion,
       status: "DRAFT",
+      gradeAMin: source.gradeAMin,
+      gradeBMin: source.gradeBMin,
       createdById: user.id,
       criteria: {
         create: source.criteria.map((c) => ({
@@ -86,6 +90,8 @@ export async function POST(
       description: true,
       version: true,
       status: true,
+      gradeAMin: true,
+      gradeBMin: true,
       createdAt: true,
       updatedAt: true,
       _count: { select: { criteria: true, results: true } },

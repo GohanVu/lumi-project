@@ -26,27 +26,6 @@ export async function POST(
   }
 
   const { id } = await params;
-  const template = await prisma.scoreTemplate.findUnique({
-    where: { id },
-    select: { id: true, status: true },
-  });
-
-  if (!template) {
-    return NextResponse.json(
-      { error: "Không tìm thấy mẫu chấm điểm", code: "NOT_FOUND" },
-      { status: 404 }
-    );
-  }
-
-  if (template.status !== "DRAFT") {
-    return NextResponse.json(
-      {
-        error: "Chỉ được thêm tiêu chí khi mẫu ở trạng thái Nháp.",
-        code: "TEMPLATE_LOCKED",
-      },
-      { status: 409 }
-    );
-  }
 
   let body: unknown;
   try {
@@ -69,32 +48,66 @@ export async function POST(
     );
   }
 
-  // sortOrder mặc định = max hiện tại + 1
-  const last = await prisma.scoreCriteria.findFirst({
-    where: { templateId: id },
-    orderBy: { sortOrder: "desc" },
-    select: { sortOrder: true },
-  });
-  const nextSortOrder = (last?.sortOrder ?? -1) + 1;
+  try {
+    const criteria = await prisma.$transaction(async (tx) => {
+      const template = await tx.scoreTemplate.findUnique({
+        where: { id },
+        select: { id: true, status: true },
+      });
 
-  const criteria = await prisma.scoreCriteria.create({
-    data: {
-      templateId: id,
-      name: result.data.name,
-      description: result.data.description ?? null,
-      maxScore: result.data.maxScore,
-      weight: result.data.weight,
-      sortOrder: nextSortOrder,
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      maxScore: true,
-      weight: true,
-      sortOrder: true,
-    },
-  });
+      if (!template) {
+        throw new Error("NOT_FOUND");
+      }
 
-  return NextResponse.json({ data: criteria }, { status: 201 });
+      if (template.status !== "DRAFT") {
+        throw new Error("TEMPLATE_LOCKED");
+      }
+
+      // sortOrder mặc định = max hiện tại + 1
+      const last = await tx.scoreCriteria.findFirst({
+        where: { templateId: id },
+        orderBy: { sortOrder: "desc" },
+        select: { sortOrder: true },
+      });
+      const nextSortOrder = (last?.sortOrder ?? -1) + 1;
+
+      return tx.scoreCriteria.create({
+        data: {
+          templateId: id,
+          name: result.data.name,
+          description: result.data.description ?? null,
+          maxScore: result.data.maxScore,
+          weight: result.data.weight,
+          sortOrder: nextSortOrder,
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          maxScore: true,
+          weight: true,
+          sortOrder: true,
+        },
+      });
+    });
+
+    return NextResponse.json({ data: criteria }, { status: 201 });
+  } catch (error: any) {
+    if (error.message === "NOT_FOUND") {
+      return NextResponse.json(
+        { error: "Không tìm thấy mẫu chấm điểm", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+    if (error.message === "TEMPLATE_LOCKED") {
+      return NextResponse.json(
+        {
+          error: "Chỉ được thêm tiêu chí khi mẫu ở trạng thái Nháp.",
+          code: "TEMPLATE_LOCKED",
+        },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 }

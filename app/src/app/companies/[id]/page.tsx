@@ -11,6 +11,7 @@ import { TimelineTab } from "@/components/companies/TimelineTab";
 import { TasksTab } from "@/components/companies/TasksTab";
 import { ScoresTab } from "@/components/companies/ScoresTab";
 import { FilesTab } from "@/components/companies/FilesTab";
+import { AuditLogsTab } from "@/components/companies/AuditLogsTab";
 import { queryKeys } from "@/lib/query-keys";
 import styles from "./company-detail.module.css";
 
@@ -176,7 +177,7 @@ export default function CompanyDetailPage() {
           <FilesTab companyId={company.id} />
         )}
         {activeTab === "logs" && (
-          <PlaceholderTab icon="🕐" label="Tab Lịch sử sẽ được implement ở T30" />
+          <AuditLogsTab companyId={company.id} />
         )}
       </div>
     </AppLayout>

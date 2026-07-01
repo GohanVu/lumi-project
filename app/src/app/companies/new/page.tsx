@@ -3,33 +3,18 @@
 import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { AppLayout } from "@/components/layout";
 import { invalidateCompanyLists } from "@/lib/company-queries";
 import { queryKeys } from "@/lib/query-keys";
+import {
+  companyFormSchema,
+  type CompanyFormData,
+} from "@/lib/validation/company";
 import Link from "next/link";
 import styles from "./new-company.module.css";
-
-// Form schema
-const companyFormSchema = z.object({
-  name: z.string().min(1, "Tên NPP không được để trống").max(255),
-  taxCode: z.string().max(20).optional().or(z.literal("")),
-  phone: z.string().max(20).optional().or(z.literal("")),
-  email: z.string().email("Email không hợp lệ").optional().or(z.literal("")),
-  address: z.string().max(500).optional().or(z.literal("")),
-  province: z.string().max(100).optional().or(z.literal("")),
-  district: z.string().max(100).optional().or(z.literal("")),
-  ward: z.string().max(100).optional().or(z.literal("")),
-  status: z.string().min(1),
-  source: z.string().max(255).optional().or(z.literal("")),
-  notes: z.string().max(2000).optional().or(z.literal("")),
-  assignedToId: z.string().min(1, "Phải chọn ASM phụ trách"),
-});
-
-type CompanyFormData = z.infer<typeof companyFormSchema>;
 
 // Duplicate check types
 interface DuplicateInfo {

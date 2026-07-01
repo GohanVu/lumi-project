@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/db";
 import { CompanyStatus, TaskStatus } from "@/generated/prisma/enums";
+import { determineGrade, type ScoreGrade } from "@/lib/scoring/grade";
 
 /**
  * GET /api/dashboard — Số liệu tổng quan cho Dashboard.
@@ -124,7 +125,11 @@ export async function GET() {
       where: relatedCompanyScope,
       orderBy: [{ companyId: "asc" }, { scoredAt: "desc" }],
       distinct: ["companyId"],
-      select: { totalScore: true },
+      select: {
+        totalScore: true,
+        grade: true,
+        template: { select: { gradeAMin: true, gradeBMin: true } },
+      },
     }),
   ]);
 
@@ -147,6 +152,14 @@ export async function GET() {
             10
         ) / 10
       : null;
+  const gradeCounts: Record<ScoreGrade, number> = { A: 0, B: 0, C: 0 };
+  for (const score of latestScores) {
+    const grade =
+      score.grade === "A" || score.grade === "B" || score.grade === "C"
+        ? score.grade
+        : determineGrade(score.totalScore, score.template);
+    gradeCounts[grade] += 1;
+  }
 
   return NextResponse.json({
     data: {
@@ -161,6 +174,7 @@ export async function GET() {
         scoredCompanies,
         unscoredCompanies: Math.max(totalCompanies - scoredCompanies, 0),
         averageScore,
+        gradeCounts,
       },
       overdueTasks,
       todayFollowUps,

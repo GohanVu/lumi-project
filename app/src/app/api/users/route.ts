@@ -3,6 +3,7 @@ import { hashPassword } from "better-auth/crypto";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireAuth } from "@/lib/auth-guard";
 import { createUserSchema } from "@/lib/validation/user";
+import { hasPrismaErrorCode } from "@/lib/prisma-errors";
 
 /** Trường mở rộng cho trang quản lý người dùng (T28). */
 const manageSelect = {
@@ -106,23 +107,34 @@ export async function POST(request: NextRequest) {
 
   const hashedPassword = await hashPassword(password);
 
-  const created = await prisma.user.create({
-    data: {
-      name,
-      email,
-      emailVerified: true,
-      role,
-      isActive: true,
-      accounts: {
-        create: {
-          accountId: email,
-          providerId: "credential",
-          password: hashedPassword,
+  let created;
+  try {
+    created = await prisma.user.create({
+      data: {
+        name,
+        email,
+        emailVerified: true,
+        role,
+        isActive: true,
+        accounts: {
+          create: {
+            accountId: email,
+            providerId: "credential",
+            password: hashedPassword,
+          },
         },
       },
-    },
-    select: manageSelect,
-  });
+      select: manageSelect,
+    });
+  } catch (error) {
+    if (hasPrismaErrorCode(error, "P2002")) {
+      return NextResponse.json(
+        { error: "Email đã được sử dụng", code: "EMAIL_TAKEN" },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 
   return NextResponse.json({ data: created }, { status: 201 });
 }

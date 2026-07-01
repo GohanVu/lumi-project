@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/db";
+import { determineGrade } from "@/lib/scoring/grade";
 import { overrideScoreSchema } from "@/lib/validation/score-result";
 
 /**
@@ -57,18 +58,23 @@ export async function PUT(
         companyId: true,
         systemScore: true,
         totalScore: true,
+        grade: true,
         isOverridden: true,
+        template: { select: { gradeAMin: true, gradeBMin: true } },
+        company: { select: { deletedAt: true } },
       },
     });
 
-    if (!existing) return null;
+    if (!existing || existing.company.deletedAt !== null) return null;
 
     const systemScore = existing.systemScore ?? existing.totalScore;
+    const grade = determineGrade(parsed.data.score, existing.template);
     const scoreResult = await transaction.scoreResult.update({
       where: { id },
       data: {
         systemScore,
         totalScore: parsed.data.score,
+        grade,
         isOverridden: true,
         overrideNote: parsed.data.reason,
       },
@@ -77,6 +83,7 @@ export async function PUT(
         companyId: true,
         systemScore: true,
         totalScore: true,
+        grade: true,
         isOverridden: true,
         overrideNote: true,
       },
@@ -94,6 +101,8 @@ export async function PUT(
           systemScore,
           previousEffectiveScore: existing.totalScore,
           adjustedScore: parsed.data.score,
+          previousGrade: existing.grade,
+          adjustedGrade: grade,
           reason: parsed.data.reason,
           wasAlreadyOverridden: existing.isOverridden,
         }),

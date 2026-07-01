@@ -39,3 +39,8 @@ test("contact form trims user-entered text", () => {
   assert.equal(result.fullName, "Nguyễn Văn A");
   assert.equal(result.position, "Giám đốc");
 });
+
+test("contact update rejects an empty payload", () => {
+  assert.equal(updateContactSchema.safeParse({}).success, false);
+  assert.equal(updateContactSchema.safeParse({ isPrimary: false }).success, true);
+});

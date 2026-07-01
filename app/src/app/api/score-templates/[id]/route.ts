@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-guard";
 import { prisma } from "@/lib/db";
-import { updateTemplateSchema } from "@/lib/validation/score-template";
+import {
+  gradeThresholdSchema,
+  updateTemplateSchema,
+} from "@/lib/validation/score-template";
 
 /**
  * GET /api/score-templates/[id] — Chi tiết mẫu kèm tiêu chí. Admin only.
@@ -84,7 +87,7 @@ export async function PUT(
   const { id } = await params;
   const existing = await prisma.scoreTemplate.findUnique({
     where: { id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, gradeAMin: true, gradeBMin: true },
   });
 
   if (!existing) {
@@ -126,21 +129,65 @@ export async function PUT(
   }
 
   const user = session.user as { id: string };
-  const { name, description } = result.data;
+  const { name, description, gradeAMin, gradeBMin } = result.data;
 
-  const updated = await prisma.scoreTemplate.update({
-    where: { id },
+  // Validate merged thresholds against database values
+  const mergedThresholds = gradeThresholdSchema.safeParse({
+    gradeAMin: gradeAMin ?? existing.gradeAMin,
+    gradeBMin: gradeBMin ?? existing.gradeBMin,
+  });
+
+  if (!mergedThresholds.success) {
+    return NextResponse.json(
+      {
+        error: mergedThresholds.error.errors[0]?.message ?? "Ngưỡng không hợp lệ",
+        code: "VALIDATION_ERROR",
+      },
+      { status: 422 }
+    );
+  }
+
+  const updatedResult = await prisma.scoreTemplate.updateMany({
+    where: { id, status: "DRAFT" },
     data: {
       ...(name !== undefined && { name }),
       ...(description !== undefined && { description }),
+      ...(gradeAMin !== undefined && { gradeAMin }),
+      ...(gradeBMin !== undefined && { gradeBMin }),
       updatedBy: user.id,
     },
+  });
+
+  if (updatedResult.count === 0) {
+    const temp = await prisma.scoreTemplate.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!temp) {
+      return NextResponse.json(
+        { error: "Không tìm thấy mẫu chấm điểm", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      {
+        error: "Chỉ được sửa mẫu ở trạng thái Nháp. Hãy nhân bản để tạo phiên bản mới.",
+        code: "TEMPLATE_LOCKED",
+      },
+      { status: 409 }
+    );
+  }
+
+  const updated = await prisma.scoreTemplate.findUnique({
+    where: { id },
     select: {
       id: true,
       name: true,
       description: true,
       version: true,
       status: true,
+      gradeAMin: true,
+      gradeBMin: true,
       createdAt: true,
       updatedAt: true,
     },

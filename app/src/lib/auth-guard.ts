@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { auth } from "./auth";
+import { prisma } from "./db";
+import { resolveActiveSessionUser } from "./session-user";
 
 /**
  * Get current authenticated session from API route.
@@ -9,7 +11,21 @@ export async function getSession() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  return session;
+  if (!session) return null;
+
+  const sessionUser = session.user as typeof session.user & { id: string };
+  const databaseUser = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: { id: true, role: true, isActive: true },
+  });
+  const activeUser = resolveActiveSessionUser(sessionUser, databaseUser);
+
+  if (!activeUser) {
+    await prisma.session.deleteMany({ where: { userId: sessionUser.id } });
+    return null;
+  }
+
+  return { ...session, user: activeUser };
 }
 
 /**

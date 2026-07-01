@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-guard";
-import { z } from "zod";
-import { CompanyStatus } from "@/generated/prisma/enums";
+import { resolveCompanyAssigneeId } from "@/lib/company-assignment";
+import { updateCompanySchema } from "@/lib/validation/company";
+import { hasPrismaErrorCode } from "@/lib/prisma-errors";
 
 /**
  * GET /api/companies/[id] — Chi tiết 1 NPP
@@ -59,21 +60,6 @@ export async function GET(
 /**
  * PUT /api/companies/[id] — Cập nhật NPP
  */
-const updateCompanySchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  taxCode: z.string().max(20).optional().nullable(),
-  phone: z.string().max(20).optional().nullable(),
-  email: z.string().email().optional().nullable().or(z.literal("")),
-  address: z.string().max(500).optional().nullable(),
-  province: z.string().max(100).optional().nullable(),
-  district: z.string().max(100).optional().nullable(),
-  ward: z.string().max(100).optional().nullable(),
-  status: z.nativeEnum(CompanyStatus).optional(),
-  source: z.string().max(255).optional().nullable(),
-  notes: z.string().max(2000).optional().nullable(),
-  assignedToId: z.string().optional(),
-});
-
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -129,6 +115,28 @@ export async function PUT(
   }
 
   const data = parseResult.data;
+  let assignedToId = data.assignedToId;
+
+  if (data.assignedToId !== undefined) {
+    assignedToId = resolveCompanyAssigneeId(user, data.assignedToId) ?? undefined;
+    if (!assignedToId) {
+      return NextResponse.json(
+        { error: "ASM phụ trách không hợp lệ", code: "INVALID_ASSIGNEE" },
+        { status: 400 }
+      );
+    }
+
+    const assignee = await prisma.user.findFirst({
+      where: { id: assignedToId, isActive: true },
+      select: { id: true },
+    });
+    if (!assignee) {
+      return NextResponse.json(
+        { error: "ASM phụ trách không hợp lệ", code: "INVALID_ASSIGNEE" },
+        { status: 400 }
+      );
+    }
+  }
 
   // Check duplicate taxCode if changed
   if (data.taxCode && data.taxCode !== existing.taxCode) {
@@ -164,13 +172,34 @@ export async function PUT(
     }
   }
 
-  const updated = await prisma.company.update({
-    where: { id },
-    data: {
-      ...data,
-      updatedBy: user.id,
-    },
-  });
+  let updated;
+  try {
+    updated = await prisma.company.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(data.taxCode !== undefined && { taxCode: data.taxCode || null }),
+        ...(data.phone !== undefined && { phone: data.phone || null }),
+        ...(data.email !== undefined && { email: data.email || null }),
+        ...(data.address !== undefined && { address: data.address || null }),
+        ...(data.province !== undefined && { province: data.province || null }),
+        ...(data.district !== undefined && { district: data.district || null }),
+        ...(data.ward !== undefined && { ward: data.ward || null }),
+        ...(data.source !== undefined && { source: data.source || null }),
+        ...(data.notes !== undefined && { notes: data.notes || null }),
+        ...(assignedToId !== undefined && { assignedToId }),
+        updatedBy: user.id,
+      },
+    });
+  } catch (error) {
+    if (hasPrismaErrorCode(error, "P2002")) {
+      return NextResponse.json(
+        { error: "Mã số thuế đã được sử dụng", code: "DUPLICATE_TAX_CODE" },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 
   return NextResponse.json({ data: updated });
 }

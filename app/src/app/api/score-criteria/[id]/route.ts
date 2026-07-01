@@ -70,26 +70,60 @@ export async function PUT(
 
   const { name, description, maxScore, weight, sortOrder } = result.data;
 
-  const updated = await prisma.scoreCriteria.update({
-    where: { id },
-    data: {
-      ...(name !== undefined && { name }),
-      ...(description !== undefined && { description }),
-      ...(maxScore !== undefined && { maxScore }),
-      ...(weight !== undefined && { weight }),
-      ...(sortOrder !== undefined && { sortOrder }),
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      maxScore: true,
-      weight: true,
-      sortOrder: true,
-    },
-  });
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const criteria = await tx.scoreCriteria.findUnique({
+        where: { id },
+        select: { id: true, template: { select: { status: true } } },
+      });
 
-  return NextResponse.json({ data: updated });
+      if (!criteria) {
+        throw new Error("NOT_FOUND");
+      }
+
+      if (criteria.template.status !== "DRAFT") {
+        throw new Error("TEMPLATE_LOCKED");
+      }
+
+      return tx.scoreCriteria.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(description !== undefined && { description }),
+          ...(maxScore !== undefined && { maxScore }),
+          ...(weight !== undefined && { weight }),
+          ...(sortOrder !== undefined && { sortOrder }),
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          maxScore: true,
+          weight: true,
+          sortOrder: true,
+        },
+      });
+    });
+
+    return NextResponse.json({ data: updated });
+  } catch (error: any) {
+    if (error.message === "NOT_FOUND") {
+      return NextResponse.json(
+        { error: "Không tìm thấy tiêu chí", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+    if (error.message === "TEMPLATE_LOCKED") {
+      return NextResponse.json(
+        {
+          error: "Chỉ được sửa tiêu chí khi mẫu ở trạng thái Nháp.",
+          code: "TEMPLATE_LOCKED",
+        },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 }
 
 /**
@@ -114,29 +148,41 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const criteria = await prisma.scoreCriteria.findUnique({
-    where: { id },
-    select: { id: true, template: { select: { status: true } } },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const criteria = await tx.scoreCriteria.findUnique({
+        where: { id },
+        select: { id: true, template: { select: { status: true } } },
+      });
 
-  if (!criteria) {
-    return NextResponse.json(
-      { error: "Không tìm thấy tiêu chí", code: "NOT_FOUND" },
-      { status: 404 }
-    );
+      if (!criteria) {
+        throw new Error("NOT_FOUND");
+      }
+
+      if (criteria.template.status !== "DRAFT") {
+        throw new Error("TEMPLATE_LOCKED");
+      }
+
+      await tx.scoreCriteria.delete({ where: { id } });
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error: any) {
+    if (error.message === "NOT_FOUND") {
+      return NextResponse.json(
+        { error: "Không tìm thấy tiêu chí", code: "NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+    if (error.message === "TEMPLATE_LOCKED") {
+      return NextResponse.json(
+        {
+          error: "Chỉ được xóa tiêu chí khi mẫu ở trạng thái Nháp.",
+          code: "TEMPLATE_LOCKED",
+        },
+        { status: 409 }
+      );
+    }
+    throw error;
   }
-
-  if (criteria.template.status !== "DRAFT") {
-    return NextResponse.json(
-      {
-        error: "Chỉ được xóa tiêu chí khi mẫu ở trạng thái Nháp.",
-        code: "TEMPLATE_LOCKED",
-      },
-      { status: 409 }
-    );
-  }
-
-  await prisma.scoreCriteria.delete({ where: { id } });
-
-  return new NextResponse(null, { status: 204 });
 }

@@ -1,0 +1,158 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+/* Timeline Layout */
+.timeline {
+  position: relative;
+  padding-left: var(--space-6);
+  border-left: 2px solid var(--border-color);
+  margin-left: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.timelineItem {
+  position: relative;
+}
+
+.timelineMarker {
+  position: absolute;
+  left: calc(-1 * var(--space-6) - 7px);
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--color-gray-300);
+  border: 2px solid var(--bg-surface);
+}
+
+/* Actions marker colors */
+.markerScore {
+  background-color: var(--color-primary-500);
+}
+
+.markerOverride {
+  background-color: var(--color-warning-500);
+}
+
+.markerDefault {
+  background-color: var(--color-gray-400);
+}
+
+.logCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+  gap: var(--space-2);
+}
+
+.logTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actionBadge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeScore {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.badgeOverride {
+  background-color: var(--color-warning-100);
+  color: #854d0e;
+}
+
+.badgeDefault {
+  background-color: var(--color-gray-100);
+  color: var(--text-secondary);
+}
+
+.logTime {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.logDetails {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background-color: var(--color-gray-50);
+  padding: var(--space-3);
+  border-radius: var(--border-radius-sm);
+  border-left: 3px solid var(--color-gray-300);
+}
+
+.detailsScore {
+  border-left-color: var(--color-primary-500);
+}
+
+.detailsOverride {
+  border-left-color: var(--color-warning-500);
+}
+
+.logUser {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Common states */
+.loading,
+.empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.error {
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-danger-light);
+  color: #991b1b;
+  font-size: var(--text-sm);
+}

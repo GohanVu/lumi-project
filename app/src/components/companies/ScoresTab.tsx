@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { calculateScore } from "@/lib/scoring/calculate";
+import { determineGrade } from "@/lib/scoring/grade";
 import {
   compareScoreResults,
   type ComparableScoreResult,
@@ -36,6 +37,8 @@ interface ScoreTemplate {
   name: string;
   description: string | null;
   version: number;
+  gradeAMin: number;
+  gradeBMin: number;
   criteria: ScoreCriteria[];
 }
 
@@ -846,6 +849,15 @@ function ScoringCriteriaForm({
         <div>
           <span>Độ hoàn thiện</span>
           <strong>{preview.dataCompleteness.toFixed(2)}%</strong>
+        </div>
+        <div>
+          <span>Xếp hạng tạm tính</span>
+          <strong>
+            {determineGrade(preview.totalScore, {
+              gradeAMin: template.gradeAMin,
+              gradeBMin: template.gradeBMin,
+            })}
+          </strong>
         </div>
         {!preview.canFinalize && (
           <p>Chính sách hiện tại yêu cầu nhập đủ tất cả tiêu chí.</p>

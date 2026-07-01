@@ -33,6 +33,11 @@
   background-color: var(--color-primary-700);
 }
 
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Layout: master-detail */
 .layout {
   display: grid;

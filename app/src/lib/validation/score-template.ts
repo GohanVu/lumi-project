@@ -2,6 +2,42 @@ import { z } from "zod";
 
 // ─── ScoreTemplate ──────────────────────────────────────────────────────────
 
+const gradeThresholdNumberSchema = z
+  .number({ invalid_type_error: "Ngưỡng phải là số" })
+  .finite("Ngưỡng phải là số hợp lệ")
+  .min(0, "Ngưỡng phải từ 0 đến 100")
+  .max(100, "Ngưỡng phải từ 0 đến 100");
+
+const gradeThresholdFormNumberSchema = z.coerce
+  .number({ invalid_type_error: "Ngưỡng phải là số" })
+  .finite("Ngưỡng phải là số hợp lệ")
+  .min(0, "Ngưỡng phải từ 0 đến 100")
+  .max(100, "Ngưỡng phải từ 0 đến 100");
+
+function validateThresholdOrder(
+  data: { gradeAMin?: number; gradeBMin?: number },
+  context: z.RefinementCtx
+) {
+  if (
+    data.gradeAMin !== undefined &&
+    data.gradeBMin !== undefined &&
+    data.gradeBMin >= data.gradeAMin
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Ngưỡng B phải nhỏ hơn ngưỡng A",
+      path: ["gradeBMin"],
+    });
+  }
+}
+
+export const gradeThresholdSchema = z
+  .object({
+    gradeAMin: gradeThresholdNumberSchema,
+    gradeBMin: gradeThresholdNumberSchema,
+  })
+  .superRefine(validateThresholdOrder);
+
 export const templateFormSchema = z.object({
   name: z
     .string()
@@ -9,7 +45,9 @@ export const templateFormSchema = z.object({
     .min(1, "Tên mẫu không được để trống")
     .max(255, "Tên mẫu tối đa 255 ký tự"),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
-});
+  gradeAMin: gradeThresholdFormNumberSchema,
+  gradeBMin: gradeThresholdFormNumberSchema,
+}).superRefine(validateThresholdOrder);
 
 export const createTemplateSchema = z.object({
   name: z
@@ -18,13 +56,18 @@ export const createTemplateSchema = z.object({
     .min(1, "Tên mẫu không được để trống")
     .max(255, "Tên mẫu tối đa 255 ký tự"),
   description: z.string().trim().max(2000).optional().nullable(),
-});
+  gradeAMin: gradeThresholdNumberSchema.default(80),
+  gradeBMin: gradeThresholdNumberSchema.default(60),
+}).superRefine(validateThresholdOrder);
 
 export const updateTemplateSchema = z
   .object({
     name: z.string().trim().min(1, "Tên mẫu không được để trống").max(255).optional(),
     description: z.string().trim().max(2000).optional().nullable(),
+    gradeAMin: gradeThresholdNumberSchema.optional(),
+    gradeBMin: gradeThresholdNumberSchema.optional(),
   })
+  .superRefine(validateThresholdOrder)
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: "Cần ít nhất một trường để cập nhật",
   });
