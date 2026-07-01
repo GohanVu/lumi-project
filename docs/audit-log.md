@@ -704,10 +704,31 @@
 - Cập nhật [docs/plan.md](file:///d:/Project/lumi-project/docs/plan.md): Thêm task `T34: Trang Quản lý Nhiệm vụ Tập trung (/tasks)` vào Phase 6 làm Todo.
 
 ### Kết quả
-- Kế hoạch dự án được cập nhật task T34.
+- T34 hoàn thành ✅ (Trang `/tasks` hoạt động tốt, đã tích hợp TanStack Query và queryKeys conventions, chạy qua 78/78 tests).
 
 ### Tasks liên quan
-- T34 (Đã thêm vào plan)
+- T34 ✅
+
+---
+
+## 2026-07-01 — Session 23: Brainstorm & Lên kế hoạch Theme Light/Dark Mode (T35)
+
+### Yêu cầu
+- Người dùng phát hiện lỗi trải nghiệm: Nút chọn theme của Next.js/TanStack DevTools ở góc dưới bên trái (gần thông tin user) chỉ thay đổi màu của DevTools chứ không đổi màu ứng dụng.
+- Yêu cầu lên kế hoạch (plan) để thực sự đổi màu giao diện Sáng/Tối (Light/Dark Mode) toàn diện cho CRM.
+
+### Công việc đã làm
+- Làm rõ nguyên nhân: Hộp thoại "Preferences" chọn theme trong screenshot thực chất là cài đặt DevTools của hệ thống, không phải cấu hình theme của CRM.
+- Phân tích kiến trúc: Sử dụng biến CSS (CSS Custom Properties) để chuyển đổi giao diện động, tích hợp script chống nhấp nháy (anti-FOUC) vào Root Layout.
+- Cập nhật [docs/plan.md](file:///d:/Project/lumi-project/docs/plan.md): Thêm task `T35: Hệ thống Theme Light/Dark Mode toàn diện` làm Todo.
+- Tạo [implementation_plan.md](file:///C:/Users/Admin/.gemini/antigravity/brain/a4c34031-deef-4fea-8197-fc51aefea33c/implementation_plan.md) chi tiết cho T35.
+
+### Kết quả
+- Đề xuất kế hoạch T35 và gửi yêu cầu phê duyệt từ người dùng.
+
+### Tasks liên quan
+- T35 (Đã thêm vào plan)
+
 
 
 

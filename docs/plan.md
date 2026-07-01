@@ -87,7 +87,8 @@
 |---------|--------|--------|--------------|-------|
 | T29 | Xử lý edge cases, validation đầy đủ | ✅ Done | P5 | Audit auth/RBAC, mutation validation và lỗi cạnh tranh dữ liệu |
 | T30 | Audit log Tab Lịch sử per NPP | ✅ Done | P5 | |
-| T34 | Trang Quản lý Nhiệm vụ Tập trung (/tasks) | ⬜ Todo | P3 | Xây dựng trang danh sách task toàn cục, bộ lọc trạng thái/độ ưu tiên/NPP, API GET /api/tasks |
+| T34 | Trang Quản lý Nhiệm vụ Tập trung (/tasks) | ✅ Done | P3 | Xây dựng trang danh sách task toàn cục, bộ lọc trạng thái/độ ưu tiên/NPP, API GET /api/tasks |
+| T35 | Hệ thống Theme Light/Dark Mode toàn diện | ⬜ Todo | — | Thiết lập biến CSS Sáng/Tối, tích hợp nút chuyển theme tại Header |
 | T31 | Build production Docker image | ⬜ Todo | T29 | |
 | T32 | Deploy lên VPS LANIT, cấu hình Nginx + HTTPS | ⬜ Todo | T31 | |
 | T33 | Test end-to-end với user thật | ⬜ Todo | T32 | |
