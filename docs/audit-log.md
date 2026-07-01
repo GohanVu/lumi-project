@@ -691,4 +691,23 @@
 ### Tasks liên quan
 - T30 ✅
 
+---
+
+## 2026-07-01 — Session 22: Thống nhất nghiệp vụ & Thêm T34 vào Plan
+
+### Yêu cầu
+- Brainstorm làm rõ luồng nghiệp vụ của phân hệ Nhiệm vụ (Task), vai trò của NPP (Nhà phân phối) và các tác nhân hệ thống.
+- Thống nhất bổ sung trang Quản lý Nhiệm vụ Tập trung (`/tasks`) để sửa lỗi 404 trên Sidebar.
+
+### Công việc đã làm
+- Làm rõ luồng nghiệp vụ: NPP là khách hàng B2B (Company), ASM/Admin là người dùng hệ thống. Task là đầu việc nội bộ của ASM cần làm đối với NPP.
+- Cập nhật [docs/plan.md](file:///d:/Project/lumi-project/docs/plan.md): Thêm task `T34: Trang Quản lý Nhiệm vụ Tập trung (/tasks)` vào Phase 6 làm Todo.
+
+### Kết quả
+- Kế hoạch dự án được cập nhật task T34.
+
+### Tasks liên quan
+- T34 (Đã thêm vào plan)
+
+
 
